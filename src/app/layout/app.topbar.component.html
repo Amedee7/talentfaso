@@ -13,9 +13,73 @@
     </button>
 
     <div #topbarmenu class="layout-topbar-menu" [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
-        <button class="p-link layout-topbar-button" [routerLink]="'/documentation'">
-            <i class="pi pi-cog"></i>
-            <span>Settings</span>
-        </button>
+
+        <!-- Pour les utilisateurs authentifiés -->
+        <div *ngIf="isAuthenticated()" class="user-profile-wrapper">
+            <!-- Trigger du menu utilisateur -->
+            <div class="flex align-items-center gap-2 cursor-pointer p-2 hover:surface-hover border-round"
+                 (click)="toggleUserMenu($event)"
+                 #userMenuTrigger
+                 pTooltip="Menu utilisateur"
+                 tooltipPosition="bottom">
+
+                <!-- Avatar -->
+                <p-avatar
+                    [image]="getProfilePictureUrl(currentUser)"
+                    [label]="!currentUser?.profilePictureUrl ? getUserInitials(currentUser?.fullName) : ''"
+                    shape="circle"
+                    size="normal"
+                    styleClass="user-avatar border-2 border-white shadow-1"
+                    [style]="!currentUser?.profilePictureUrl ?
+                        {'background-color': getAvatarColor(currentUser?.role), 'color': '#ffffff'} : {}">
+                </p-avatar>
+
+                <!-- Informations utilisateur (cachées sur mobile) -->
+                <div class="user-info hidden lg:block">
+                    <div class="font-medium text-sm line-height-2">
+                        {{ currentUser?.fullName || 'Utilisateur' }}
+                    </div>
+                    <div class="flex align-items-center gap-1">
+                        <span class="text-xs px-2 py-1 border-round font-semibold"
+                              [ngClass]="getRoleBadgeClass(currentUser?.role)">
+                            {{ getRoleLabel(currentUser?.role) }}
+                        </span>
+                        <i *ngIf="currentUser?.verificationStatus === 'VERIFIED'"
+                           class="pi pi-check-circle text-green-500 text-xs"
+                           pTooltip="Compte vérifié"
+                           tooltipPosition="bottom"></i>
+                    </div>
+                </div>
+
+                <i class="pi pi-chevron-down text-500 ml-1 hidden lg:block"></i>
+            </div>
+
+            <!-- Menu utilisateur -->
+            <p-tieredMenu
+                [model]="userMenuItems"
+                [popup]="true"
+                appendTo="body"
+                [autoZIndex]="true"
+                [baseZIndex]="10000"
+                #userMenu
+                id="userMenu">
+            </p-tieredMenu>
+        </div>
+
+        <!-- Pour les utilisateurs non authentifiés -->
+        <div *ngIf="!isAuthenticated()" class="auth-section">
+            <button pButton
+                    label="Connexion"
+                    icon="pi pi-sign-in"
+                    class="p-button-outlined p-button-sm"
+                    [routerLink]="'/auth/login'">
+            </button>
+            <button pButton
+                    label="S'inscrire"
+                    icon="pi pi-user-plus"
+                    class="p-button-primary p-button-sm"
+                    [routerLink]="'/auth/register'">
+            </button>
+        </div>
     </div>
 </div>

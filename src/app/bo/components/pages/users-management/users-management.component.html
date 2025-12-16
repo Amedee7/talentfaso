@@ -1,0 +1,570 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card px-6 py-6">
+            <p-toast></p-toast>
+            <p-confirmDialog></p-confirmDialog>
+
+            <!-- Onglets -->
+            <div class="mb-4">
+                <p-tabView [(activeIndex)]="activeTabIndex" (onChange)="onTabChange($event)">
+                    <p-tabPanel *ngFor="let tab of tabs; let i = index"
+                                [header]="tab.label + ' (' + tab.count + ')'">
+                        <div class="mt-3">
+                            <!-- Toolbar -->
+                            <p-toolbar styleClass="mb-4">
+                                <ng-template pTemplate="left">
+                                    <div class="my-2 flex flex-wrap gap-2">
+                                        <button pButton pRipple
+                                                label="Nouvel Utilisateur"
+                                                icon="pi pi-plus"
+                                                class="p-button-success"
+                                                (click)="openNew()"></button>
+
+                                        <button pButton pRipple
+                                                label="Supprimer la sélection"
+                                                icon="pi pi-trash"
+                                                class="p-button-danger"
+                                                (click)="deleteSelectedUsers()"
+                                                [disabled]="!selectedUsers.length"></button>
+                                    </div>
+                                </ng-template>
+
+                                <ng-template pTemplate="right">
+                                    <div class="flex flex-wrap gap-2">
+                                        <!-- Sélecteur de tri -->
+                                        <p-dropdown [options]="sortOptions"
+                                                    [(ngModel)]="selectedSort"
+                                                    optionLabel="label"
+                                                    optionValue="value"
+                                                    placeholder="Trier par"
+                                                    (onChange)="loadUsers()"
+                                                    appendTo="body"
+                                                    styleClass="w-full sm:w-auto">
+                                        </p-dropdown>
+
+                                        <button pButton pRipple
+                                                label="Exporter CSV"
+                                                icon="pi pi-download"
+                                                class="p-button-help"
+                                                (click)="dt?.exportCSV()"></button>
+                                    </div>
+                                </ng-template>
+                            </p-toolbar>
+
+                            <!-- Tableau des utilisateurs -->
+                            <p-table #dt
+                                     [value]="users"
+                                     [loading]="loading"
+                                     [lazy]="true"
+                                     (onLazyLoad)="onLazyLoad($event)"
+                                     [paginator]="true"
+                                     [rows]="rowsPerPage"
+                                     [totalRecords]="totalRecords"
+                                     [rowsPerPageOptions]="[10,20,50]"
+                                     [showCurrentPageReport]="true"
+                                     currentPageReportTemplate="Affichage {first} à {last} sur {totalRecords} utilisateurs"
+                                     [globalFilterFields]="['fullName', 'email', 'companyName', 'currentTitle', 'role']"
+                                     [(selection)]="selectedUsers"
+                                     selectionMode="multiple"
+                                     [rowHover]="true"
+                                     dataKey="id">
+
+                                <ng-template pTemplate="caption">
+                                    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                                        <h5 class="m-0">{{getPageTitle()}}</h5>
+                                        <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
+                                            <span class="p-input-icon-left">
+                                                <i class="pi pi-search"></i>
+                                                <input pInputText
+                                                       type="text"
+                                                       (input)="onGlobalFilter($event)"
+                                                       placeholder="Rechercher..."
+                                                       class="w-full sm:w-auto"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </ng-template>
+
+                                <ng-template pTemplate="header">
+                                    <tr>
+                                        <th style="width: 3rem">
+                                            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                                        </th>
+                                        <th pSortableColumn="fullName">
+                                            Nom <p-sortIcon field="fullName"></p-sortIcon>
+                                        </th>
+                                        <th pSortableColumn="email">
+                                            Email <p-sortIcon field="email"></p-sortIcon>
+                                        </th>
+                                        <th pSortableColumn="role">
+                                            Rôle <p-sortIcon field="role"></p-sortIcon>
+                                        </th>
+                                        <th>Téléphone</th>
+                                        <th *ngIf="activeTab !== 'JOB_SEEKER'">Entreprise</th>
+                                        <th *ngIf="activeTab !== 'RECRUITER'">Titre</th>
+                                        <th pSortableColumn="createdAt">
+                                            Inscrit le <p-sortIcon field="createdAt"></p-sortIcon>
+                                        </th>
+                                        <th pSortableColumn="active">
+                                            Statut <p-sortIcon field="active"></p-sortIcon>
+                                        </th>
+
+                                        <th style="width: 150px">Actions</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template pTemplate="body" let-user>
+                                    <tr>
+                                        <td>
+                                            <p-tableCheckbox [value]="user"></p-tableCheckbox>
+                                        </td>
+                                        <td>
+                                            <span class="font-medium">{{user.fullName}}</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-blue-600">{{user.email}}</span>
+                                        </td>
+                                        <td>
+                                            <span [class]="'badge ' + getRoleBadgeClass(user.role)">
+                                                {{getRoleLabel(user.role)}}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-gray-600">{{user.phoneNumber || 'Non renseigné'}}</span>
+                                        </td>
+
+                                        <!-- Colonne entreprise (pas pour les job seekers) -->
+                                        <td *ngIf="activeTab !== 'JOB_SEEKER'">
+                                            <span class="font-medium">{{user.companyName || 'Non renseigné'}}</span>
+                                            <div *ngIf="user.position" class="text-sm text-gray-500">
+                                                {{user.position}}
+                                            </div>
+                                        </td>
+
+                                        <!-- Colonne titre (pas pour les recruteurs) -->
+                                        <td *ngIf="activeTab !== 'RECRUITER'">
+                                            <span class="font-medium">{{user.currentTitle || 'Non renseigné'}}</span>
+                                            <div *ngIf="user.city" class="text-sm text-gray-500">
+                                                {{user.city}}
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <span class="text-sm text-gray-500">
+                                                {{formatDate(user.createdAt)}}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span [class]="'badge ' + getStatusBadgeClass(user.active)">
+                                                {{getStatusLabel(user.active)}}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="flex gap-2">
+                                                <button pButton pRipple
+                                                        icon="pi pi-chart-bar"
+                                                        class="p-button-rounded p-button-info p-button-sm"
+                                                        (click)="showProfileCompleteness(user)"
+                                                        pTooltip="Complétude du profil"
+                                                        tooltipPosition="top"></button>
+
+                                                <button pButton pRipple
+                                                        icon="pi pi-pencil"
+                                                        class="p-button-rounded p-button-success p-button-sm"
+                                                        (click)="editUser(user)"
+                                                        pTooltip="Modifier"
+                                                        tooltipPosition="top"></button>
+
+                                                <button pButton pRipple
+                                                        [icon]="user.active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                                                        [class]="user.active ? 'p-button-rounded p-button-warning p-button-sm' : 'p-button-rounded p-button-help p-button-sm'"
+                                                        [pTooltip]="user.active ? 'Désactiver' : 'Activer'"
+                                                        tooltipPosition="top"
+                                                        (click)="toggleStatus(user)"
+                                                        [disabled]="currentTogglingId === user.id">
+                                                    <i *ngIf="currentTogglingId === user.id"
+                                                       class="pi pi-spin pi-spinner"></i>
+                                                </button>
+
+                                                <button pButton pRipple
+                                                        icon="pi pi-trash"
+                                                        class="p-button-rounded p-button-danger p-button-sm"
+                                                        (click)="deleteUser(user)"
+                                                        pTooltip="Supprimer"
+                                                        tooltipPosition="top"></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template pTemplate="emptymessage">
+                                    <tr>
+                                        <td [attr.colspan]="activeTab === 'ALL' ? 10 : 9" class="text-center p-5">
+                                            <div class="flex flex-column align-items-center">
+                                                <i class="pi pi-users text-4xl text-gray-400 mb-3"></i>
+                                                <h4 class="text-gray-500 mb-2">
+                                                    Aucun utilisateur trouvé
+                                                </h4>
+                                                <p class="text-gray-400">
+                                                    {{activeTab === 'ALL' ?
+                                                    'Les utilisateurs apparaîtront ici après leur inscription' :
+                                                    activeTab === 'RECRUITER' ?
+                                                        'Les recruteurs apparaîtront ici après leur inscription' :
+                                                        'Les candidats apparaîtront ici après leur inscription'}}
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template pTemplate="paginatorleft">
+                                    <div class="text-sm text-gray-500">
+                                        Page {{currentPage + 1}} sur {{getTotalPages()}}
+                                    </div>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </p-tabPanel>
+                </p-tabView>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dialog de création/édition -->
+<p-dialog [(visible)]="userDialog"
+          [style]="{width: '650px'}"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false">
+
+    <ng-template pTemplate="header">
+        <span class="text-xl font-bold">
+            {{isEditMode ? 'Modifier' : 'Créer'}} un utilisateur
+        </span>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+        <form [formGroup]="userForm" (ngSubmit)="saveUser()" class="p-fluid">
+
+            <!-- Informations de base -->
+            <div class="grid mb-4">
+                <div class="col-12 md:col-6">
+                    <div class="field">
+                        <label for="fullName">Nom complet *</label>
+                        <input pInputText id="fullName" formControlName="fullName" class="w-full" />
+                        <small *ngIf="f['fullName'].invalid && (f['fullName'].dirty || f['fullName'].touched)"
+                               class="p-error">
+                            Le nom complet est requis (min. 3 caractères)
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-12 md:col-6">
+                    <div class="field">
+                        <label for="email">Email *</label>
+                        <input pInputText id="email" formControlName="email" type="email" class="w-full" />
+                        <small *ngIf="f['email'].invalid && (f['email'].dirty || f['email'].touched)"
+                               class="p-error">
+                            Format d'email invalide
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Téléphone -->
+            <div class="grid mb-4">
+                <div class="col-12 md:col-6">
+                    <div class="field mb-3">
+                        <label for="phoneNumber">Téléphone *</label>
+                        <p-inputMask
+                            mask="(226) 99-99-99-99"
+                            formControlName="phoneNumber"
+                            placeholder="(226) XX-XX-XX-XX"
+                            class="w-full">
+                        </p-inputMask>
+                        <small *ngIf="f['phoneNumber'].invalid && (f['phoneNumber'].dirty || f['phoneNumber'].touched)"
+                               class="p-error">
+                            Le téléphone est requis
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-12 md:col-6">
+                    <div class="field">
+                        <label for="role">Rôle *</label>
+                        <p-dropdown [options]="roles"
+                                    formControlName="role"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Sélectionner un rôle"
+                                    appendTo="body"
+                                    class="w-full"></p-dropdown>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mot de passe (seulement pour la création) -->
+            <div *ngIf="!isEditMode" class="mb-4 p-3 surface-ground border-round">
+                <h6 class="mt-0 mb-3">Informations de connexion</h6>
+                <div class="grid">
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="password">Mot de passe *</label>
+                            <p-password formControlName="password"
+                                        [toggleMask]="true"
+                                        [feedback]="true"
+                                        placeholder="Min. 6 caractères"
+                                        class="w-full">
+                            </p-password>
+                            <small *ngIf="f['password'].invalid && (f['password'].dirty || f['password'].touched)"
+                                   class="p-error">
+                                <span *ngIf="f['password'].errors?.['required']">Le mot de passe est requis</span>
+                                <span *ngIf="f['password'].errors?.['minlength']">Min. 6 caractères</span>
+                                <span *ngIf="f['password'].errors?.['maxlength']">Max. 20 caractères</span>
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="confirmPassword">Confirmer le mot de passe *</label>
+                            <p-password formControlName="confirmPassword"
+                                        [toggleMask]="true"
+                                        placeholder="Répétez le mot de passe"
+                                        class="w-full">
+                            </p-password>
+                            <small *ngIf="f['confirmPassword'].errors?.['passwordMismatch'] &&
+                                         (f['confirmPassword'].dirty || f['confirmPassword'].touched)"
+                                   class="p-error">
+                                Les mots de passe ne correspondent pas
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statut (seulement pour l'édition) -->
+            <div *ngIf="isEditMode" class="mb-4">
+                <div class="field flex align-items-center">
+                    <p-checkbox formControlName="active" [binary]="true" inputId="active"></p-checkbox>
+                    <label for="active" class="ml-2">Compte actif</label>
+                </div>
+            </div>
+
+            <!-- Champs dynamiques selon le rôle -->
+            <div *ngIf="f['role'].value === 'JOB_SEEKER'" class="mb-4 p-3 surface-ground border-round">
+                <h6 class="mt-0 mb-3">Informations du candidat</h6>
+                <div class="grid">
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="currentTitle">Titre actuel</label>
+                            <input pInputText id="currentTitle" formControlName="currentTitle" class="w-full" />
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="city">Ville</label>
+                            <input pInputText id="city" formControlName="city" class="w-full" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="field mb-3">
+                            <label for="skills">Compétences</label>
+                            <textarea pInputTextarea id="skills" formControlName="skills"
+                                      rows="2" class="w-full"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="yearsOfExperience">Années d'expérience</label>
+                            <p-dropdown [options]="experienceYears"
+                                        formControlName="yearsOfExperience"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Sélectionner"
+                                        appendTo="body"
+                                        class="w-full"></p-dropdown>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Champs pour recruteurs -->
+            <div *ngIf="f['role'].value === 'RECRUITER'" class="mb-4 p-3 surface-ground border-round">
+                <h6 class="mt-0 mb-3">Informations de l'entreprise</h6>
+                <div class="grid">
+                    <div class="col-12">
+                        <div class="field mb-3">
+                            <label for="companyName">Nom de l'entreprise</label>
+                            <input pInputText id="companyName" formControlName="companyName" class="w-full" />
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="position">Poste</label>
+                            <input pInputText id="position" formControlName="position" class="w-full" />
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="industry">Secteur d'activité</label>
+                            <p-dropdown [options]="industries"
+                                        formControlName="industry"
+                                        placeholder="Sélectionner"
+                                        appendTo="body"
+                                        class="w-full"></p-dropdown>
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="companyWebsite">Site web</label>
+                            <input pInputText id="companyWebsite" formControlName="companyWebsite"
+                                   placeholder="https://" class="w-full" />
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="companyCity">Ville</label>
+                            <input pInputText id="companyCity" formControlName="companyCity" class="w-full" />
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="companySize">Taille de l'entreprise</label>
+                            <p-dropdown [options]="companySizes"
+                                        formControlName="companySize"
+                                        placeholder="Sélectionner"
+                                        appendTo="body"
+                                        class="w-full"></p-dropdown>
+                        </div>
+                    </div>
+                    <div class="col-12 md:col-6">
+                        <div class="field mb-3">
+                            <label for="businessRegistrationNumber">Numéro d'immatriculation</label>
+                            <input pInputText id="businessRegistrationNumber"
+                                   formControlName="businessRegistrationNumber" class="w-full" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-text"
+                (click)="hideDialog()"></button>
+        <button pButton pRipple
+                label="Enregistrer"
+                icon="pi pi-check"
+                class="p-button-success"
+                (click)="saveUser()"
+                [disabled]="userForm.invalid || loading">
+            <i *ngIf="loading" class="pi pi-spin pi-spinner mr-2"></i>
+        </button>
+    </ng-template>
+</p-dialog>
+
+
+<!-- Dialog de complétude du profil -->
+<p-dialog [(visible)]="completenessDialog"
+          [style]="{width: '500px'}"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [closable]="true"
+          (onHide)="selectedUserForCompleteness = null; profileCompleteness = null;">
+
+    <ng-template pTemplate="header">
+        <span class="text-xl font-bold">
+            <i class="pi pi-chart-bar mr-2"></i>
+            Complétude du profil
+        </span>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+        <div *ngIf="completenessLoading" class="text-center p-5">
+            <p-progressSpinner></p-progressSpinner>
+            <p class="mt-3">Chargement de la complétude...</p>
+        </div>
+
+        <div *ngIf="!completenessLoading && profileCompleteness">
+            <!-- En-tête avec informations utilisateur -->
+            <div class="mb-4">
+                <h5 class="mt-0 mb-2">{{selectedUserForCompleteness?.fullName}}</h5>
+                <div class="flex align-items-center gap-2 text-sm text-gray-600">
+                    <i class="pi pi-envelope"></i>
+                    <span>{{selectedUserForCompleteness?.email}}</span>
+                </div>
+                <div class="flex align-items-center gap-2 text-sm text-gray-600">
+                    <i class="pi pi-briefcase"></i>
+                    <span>{{getRoleLabel(selectedUserForCompleteness?.role)}}</span>
+                </div>
+            </div>
+
+            <!-- Jauge de progression -->
+            <div class="mb-6">
+                <div class="flex justify-content-between mb-2">
+                    <span class="font-medium">Taux de complétude</span>
+                    <span class="font-bold" [ngClass]="getCompletenessClass(profileCompleteness.completenessPercentage)">
+                        {{profileCompleteness.completenessPercentage}}%
+                    </span>
+                </div>
+
+                <!-- Barre de progression -->
+                <p-progressBar [value]="profileCompleteness.completenessPercentage"
+                               [showValue]="false"
+                               [styleClass]="'h-3 ' + getCompletenessClass(profileCompleteness.completenessPercentage)">
+                </p-progressBar>
+
+                <!-- Libellé -->
+                <div class="text-center mt-1">
+                    <span [ngClass]="'font-medium ' + getCompletenessClass(profileCompleteness.completenessPercentage)">
+                        {{getCompletenessLabel(profileCompleteness.completenessPercentage)}}
+                    </span>
+                    <p class="text-sm text-gray-600 mt-1">
+                        {{profileCompleteness.message}}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Champs manquants -->
+            <div *ngIf="profileCompleteness.missingFields?.length > 0" class="mb-4">
+                <h6 class="mt-0 mb-3 text-red-600">
+                    <i class="pi pi-exclamation-triangle mr-2"></i>
+                    Champs à compléter ({{profileCompleteness.missingFields.length}})
+                </h6>
+                <ul class="list-none p-0 m-0">
+                    <li *ngFor="let field of profileCompleteness.missingFields"
+                        class="flex align-items-center gap-2 mb-2 p-2 surface-red-50 border-round">
+                        <i class="pi pi-times text-red-500"></i>
+                        <span>{{field}}</span> <!-- Utilisation directe -->
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Champs complétés -->
+            <div *ngIf="profileCompleteness.completedFields?.length > 0">
+                <h6 class="mt-0 mb-3 text-green-600">
+                    <i class="pi pi-check-circle mr-2"></i>
+                    Champs complétés ({{profileCompleteness.completedFields.length}})
+                </h6>
+                <div class="flex flex-wrap gap-2">
+        <span *ngFor="let field of profileCompleteness.completedFields"
+              class="inline-flex align-items-center gap-1 px-3 py-1 surface-green-50 text-green-700 border-round">
+            <i class="pi pi-check text-green-500 text-sm"></i>
+            <span class="text-sm">{{field}}</span> <!-- Utilisation directe -->
+        </span>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="!completenessLoading && !profileCompleteness" class="text-center p-5">
+            <i class="pi pi-exclamation-circle text-4xl text-gray-400 mb-3"></i>
+            <p class="text-gray-600">Aucune donnée de complétude disponible</p>
+        </div>
+    </ng-template>
+</p-dialog>

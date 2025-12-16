@@ -1,0 +1,113 @@
+<div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
+    <div class="flex flex-column align-items-center justify-content-center">
+        <img src="assets/layout/images/{{layoutService.config().colorScheme === 'light' ? 'logo-dark' : 'logo-white'}}.svg" alt="Sakai logo" class="mb-5 w-6rem flex-shrink-0">
+        <div style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
+            <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius:53px">
+                <div class="text-center mb-5">
+                    <div class="text-900 text-3xl font-medium mb-3">Bienvenue sur Talent Faso</div>
+                    <span class="text-600 font-medium">Connectez-vous pour continuer</span>
+                </div>
+
+                <!-- Message d'erreur général -->
+                <div *ngIf="generalErrorMessage" class="mb-3 p-3 border-round border-1 surface-border" style="background: #fef2f2;">
+                    <div class="flex align-items-center">
+                        <i class="pi pi-exclamation-circle text-red-500 mr-2"></i>
+                        <span class="text-red-500 font-medium">{{generalErrorMessage}}</span>
+                    </div>
+                </div>
+
+                <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+                    <div class="mb-3">
+                        <label for="email" class="block text-900 font-medium mb-2">Email</label>
+                        <input
+                                id="email"
+                                type="email"
+                                formControlName="email"
+                                pInputText
+                                class="w-full"
+                                placeholder="votre@email.com"
+                                [ngClass]="{'p-invalid': email?.invalid && (email?.dirty || email?.touched)}"
+                                autocomplete="email">
+
+                        <!-- Messages d'erreur pour l'email -->
+                        <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
+                            <small *ngIf="email?.errors?.['required']">L'email est requis</small>
+                            <small *ngIf="email?.errors?.['email']">Format d'email invalide</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="block text-900 font-medium mb-2">Mot de passe</label>
+                        <div class="p-inputgroup">
+                            <input
+                                    [type]="showPassword ? 'text' : 'password'"
+                                    id="password"
+                                    formControlName="password"
+                                    pInputText
+                                    class="w-full"
+                                    placeholder="Votre mot de passe"
+                                    [ngClass]="{'p-invalid': password?.invalid && (password?.dirty || password?.touched)}"
+                                    autocomplete="current-password">
+                            <button
+                                    type="button"
+                                    pButton
+                                    icon="pi {{showPassword ? 'pi-eye-slash' : 'pi-eye'}}"
+                                    (click)="togglePasswordVisibility()"
+                                    class="p-button-outlined">
+                            </button>
+                        </div>
+
+                        <!-- Messages d'erreur pour le mot de passe -->
+                        <div *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="error-message">
+                            <small *ngIf="password?.errors?.['required']">Le mot de passe est requis</small>
+                            <small *ngIf="password?.errors?.['minlength']">Minimum 6 caractères</small>
+                        </div>
+                    </div>
+
+                    <div class="flex align-items-center justify-content-between mb-6">
+                        <div class="flex align-items-center">
+                            <p-checkbox
+                                    formControlName="rememberMe"
+                                    [binary]="true"
+                                    inputId="rememberme">
+                            </p-checkbox>
+                            <label for="rememberme" class="ml-2">Se souvenir de moi</label>
+                        </div>
+                        <a
+                                (click)="onForgotPassword()"
+                                class="font-medium no-underline text-blue-500 cursor-pointer">
+                            Mot de passe oublié?
+                        </a>
+                    </div>
+
+                    <!-- Bouton de connexion avec spinner -->
+                    <button
+                            pButton
+                            pRipple
+                            label="Connexion"
+                            icon="pi pi-sign-in"
+                            class="w-full"
+                            [disabled]="loading || loginForm.invalid"
+                            type="submit">
+                        <span *ngIf="loading" class="flex align-items-center justify-content-center">
+                            <span class="spinner mr-2"></span>
+                            Connexion en cours...
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Lien vers l'inscription -->
+                <div class="text-center mt-5">
+                    <span class="text-600 font-medium">Pas encore de compte?</span>
+                    <a
+                            (click)="goToRegister()"
+                            class="font-medium no-underline text-blue-500 cursor-pointer ml-2">
+                        Créer un compte
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <p-toast position="top-right"></p-toast>
+    </div>
+</div>

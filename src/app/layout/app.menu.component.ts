@@ -25,30 +25,18 @@ export class AppMenuComponent implements OnInit {
                 icon: 'pi pi-fw pi-briefcase',
                 items: [
                     {
-                        label: 'Auth',
-                        icon: 'pi pi-fw pi-user',
-                        items: [
-                            {
-                                label: 'Login',
-                                icon: 'pi pi-fw pi-sign-in',
-                                routerLink: ['/auth/login']
-                            },
-                            {
-                                label: 'Error',
-                                icon: 'pi pi-fw pi-times-circle',
-                                routerLink: ['/auth/error']
-                            },
-                            {
-                                label: 'Access Denied',
-                                icon: 'pi pi-fw pi-lock',
-                                routerLink: ['/auth/access']
-                            }
-                        ]
+                        label: 'Utilisateurs',
+                        icon: 'pi pi-fw pi-users',
+                        routerLink: ['/pages/users-management']
                     },
                     {
-                        label: 'Crud',
-                        icon: 'pi pi-fw pi-pencil',
-                        routerLink: ['/pages/crud']
+                        label: 'Roles',
+                        icon: 'pi pi-fw pi-list',
+                        routerLink: ['/pages/roles-management']
+                    },{
+                        label: 'Competences',
+                        icon: 'pi pi-fw pi-list',
+                        routerLink: ['/pages/skill-types-management']
                     }
                 ]
             }

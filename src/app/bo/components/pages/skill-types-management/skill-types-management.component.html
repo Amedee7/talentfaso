@@ -1,0 +1,311 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card px-6 py-6">
+            <p-toast></p-toast>
+            <p-confirmDialog></p-confirmDialog>
+
+            <!-- Toolbar -->
+            <p-toolbar styleClass="mb-4">
+                <ng-template pTemplate="left">
+                    <div class="my-2 flex flex-wrap gap-2">
+                        <button pButton pRipple
+                                label="Nouveau Type"
+                                icon="pi pi-plus"
+                                class="p-button-success"
+                                (click)="openNew()"></button>
+
+                        <button pButton pRipple
+                                label="Supprimer la sélection"
+                                icon="pi pi-trash"
+                                class="p-button-danger"
+                                (click)="deleteSelectedSkillTypes()"
+                                [disabled]="!selectedSkillTypes.length"></button>
+
+                        <p-selectButton [options]="[
+                            {label: 'Tous', value: false},
+                            {label: 'Actifs seulement', value: true}
+                        ]"
+                                        [(ngModel)]="showOnlyActive"
+                                        (onChange)="toggleShowActive()"
+                                        optionLabel="label"
+                                        optionValue="value">
+                        </p-selectButton>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="right">
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Sélecteur de tri -->
+                        <p-dropdown [options]="sortOptions"
+                                    [(ngModel)]="selectedSort"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Trier par"
+                                    (onChange)="onSortChange()"
+                                    styleClass="w-full sm:w-auto"
+                                    appendTo="body">
+                        </p-dropdown>
+
+                        <button pButton pRipple
+                                label="Exporter CSV"
+                                icon="pi pi-download"
+                                class="p-button-help"
+                                (click)="dt?.exportCSV()"></button>
+                    </div>
+                </ng-template>
+            </p-toolbar>
+
+            <!-- Tableau avec pagination lazy -->
+            <p-table #dt
+                     [value]="skillTypes"
+                     [loading]="loading"
+                     [lazy]="true"
+                     (onLazyLoad)="onLazyLoad($event)"
+                     [paginator]="true"
+                     [rows]="rowsPerPage"
+                     [totalRecords]="totalRecords"
+                     [rowsPerPageOptions]="[10,20,50]"
+                     [showCurrentPageReport]="true"
+                     currentPageReportTemplate="Affichage {first} à {last} sur {totalRecords} types"
+                     [globalFilterFields]="['name', 'description']"
+                     [(selection)]="selectedSkillTypes"
+                     selectionMode="multiple"
+                     [rowHover]="true"
+                     dataKey="id"
+                     [sortField]="sortField"
+                     [sortOrder]="sortOrder"
+                     (onSort)="onSortChange()">
+
+                <ng-template pTemplate="caption">
+                    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                        <h5 class="m-0">Gestion des Types de Compétences</h5>
+                        <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
+                            <span class="p-input-icon-left">
+                                <i class="pi pi-search"></i>
+                                <input pInputText
+                                       type="text"
+                                       (input)="onGlobalFilter($event)"
+                                       placeholder="Rechercher..."
+                                       class="w-full sm:w-auto"/>
+                            </span>
+                            <button pButton
+                                    label="Réinitialiser"
+                                    icon="pi pi-refresh"
+                                    class="p-button-outlined"
+                                    (click)="resetPagination()"></button>
+                        </div>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 3rem">
+                            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                        </th>
+                        <th pSortableColumn="name">
+                            Nom <p-sortIcon field="name"></p-sortIcon>
+                        </th>
+                        <th>Description</th>
+                        <th pSortableColumn="isActive">
+                            Statut <p-sortIcon field="isActive"></p-sortIcon>
+                        </th>
+                        <th pSortableColumn="createdAt">
+                            Créé le <p-sortIcon field="createdAt"></p-sortIcon>
+                        </th>
+                        <th>Actions</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-skillType>
+                    <tr>
+                        <td>
+                            <p-tableCheckbox [value]="skillType"></p-tableCheckbox>
+                        </td>
+                        <td>
+                            <div class="flex align-items-center gap-2">
+                                <i *ngIf="skillType.iconUrl"
+                                   [class]="skillType.iconUrl"
+                                   class="text-lg text-primary"></i>
+                                <span class="font-medium">{{skillType.name}}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="line-clamp-2" [pTooltip]="skillType.description"
+                                  tooltipPosition="top">
+                                {{skillType.description || 'Aucune description'}}
+                            </span>
+                        </td>
+                        <td>
+                            <span [class]="'badge ' + getStatusBadgeClass(skillType.isActive)">
+                                {{getStatusLabel(skillType.isActive)}}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-sm text-gray-500">
+                                {{formatDate(skillType.createdAt)}}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button pButton pRipple
+                                        icon="pi pi-pencil"
+                                        class="p-button-rounded p-button-success p-button-sm"
+                                        (click)="editSkillType(skillType)"
+                                        pTooltip="Modifier"
+                                        tooltipPosition="top"></button>
+
+                                <button pButton pRipple
+                                        [icon]="skillType.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                                        [class]="skillType.isActive ? 'p-button-rounded p-button-warning p-button-sm' : 'p-button-rounded p-button-help p-button-sm'"
+                                        [pTooltip]="skillType.isActive ? 'Désactiver' : 'Activer'"
+                                        tooltipPosition="top"
+                                        (click)="toggleStatus(skillType)"
+                                        [disabled]="currentTogglingId === skillType.id">
+                                    <i *ngIf="currentTogglingId === skillType.id"
+                                       class="pi pi-spin pi-spinner"></i>
+                                </button>
+
+                                <button pButton pRipple
+                                        icon="pi pi-trash"
+                                        class="p-button-rounded p-button-danger p-button-sm"
+                                        (click)="deleteSkillType(skillType)"
+                                        pTooltip="Supprimer"
+                                        tooltipPosition="top"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="6" class="text-center p-5">
+                            <div class="flex flex-column align-items-center">
+                                <i class="pi pi-tags text-4xl text-gray-400 mb-3"></i>
+                                <h4 class="text-gray-500 mb-2">
+                                    {{showOnlyActive ? 'Aucun type de compétence actif' : 'Aucun type de compétence'}}
+                                </h4>
+                                <p class="text-gray-400">
+                                    {{showOnlyActive ? 'Activez des types ou créez-en de nouveaux' : 'Créez votre premier type de compétence'}}
+                                </p>
+                                <button pButton
+                                        label="Créer un type"
+                                        icon="pi pi-plus"
+                                        class="mt-3"
+                                        (click)="openNew()"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="paginatorleft">
+                    <div class="text-sm text-gray-500">
+                        Page {{currentPage + 1}} sur {{getTotalPages()}}
+                    </div>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+</div>
+
+<!-- Dialog de création/édition (inchangé) -->
+<p-dialog [(visible)]="skillTypeDialog"
+          [style]="{width: '500px'}"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          (onHide)="hideDialog()">
+
+    <ng-template pTemplate="header">
+        <span class="text-xl font-bold">
+            {{isEditMode ? 'Modifier' : 'Créer'}} un type de compétence
+        </span>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+        <form [formGroup]="skillTypeForm" (ngSubmit)="saveSkillType()" class="p-fluid">
+
+            <!-- Nom -->
+            <div class="field mb-4">
+                <label for="name">Nom *</label>
+                <input pInputText id="name" formControlName="name" class="w-full" />
+                <small *ngIf="f['name'].invalid && (f['name'].dirty || f['name'].touched)"
+                       class="p-error">
+                    <span *ngIf="f['name'].errors?.['required']">Le nom est requis</span>
+                    <span *ngIf="f['name'].errors?.['minlength']">Minimum 2 caractères</span>
+                    <span *ngIf="f['name'].errors?.['maxlength']">Maximum 50 caractères</span>
+                </small>
+            </div>
+
+            <!-- Description -->
+            <div class="field mb-4">
+                <label for="description">Description</label>
+                <textarea pInputTextarea id="description"
+                          formControlName="description"
+                          rows="3"
+                          class="w-full"
+                          [autoResize]="true"></textarea>
+                <small class="p-text-secondary">
+                    {{f['description'].value?.length || 0}}/500 caractères
+                </small>
+                <small *ngIf="f['description'].invalid && (f['description'].dirty || f['description'].touched)"
+                       class="p-error">
+                    Maximum 500 caractères
+                </small>
+            </div>
+
+            <!-- Icône -->
+            <div class="field mb-4">
+                <label for="iconUrl">Icône</label>
+                <p-dropdown [options]="availableIcons"
+                            formControlName="iconUrl"
+                            optionLabel="label"
+                            optionValue="value"
+                            [showClear]="true"
+                            placeholder="Sélectionner une icône"
+                            appendTo="body"
+                            class="w-full">
+                    <ng-template pTemplate="selectedItem">
+                        <div *ngIf="f['iconUrl'].value" class="flex align-items-center gap-2">
+                            <i [class]="f['iconUrl'].value"></i>
+                            <span>{{getIconLabel(f['iconUrl'].value)}}</span>
+                        </div>
+                    </ng-template>
+                    <ng-template let-icon pTemplate="item">
+                        <div class="flex align-items-center gap-2">
+                            <i [class]="icon.icon"></i>
+                            <span>{{icon.label}}</span>
+                        </div>
+                    </ng-template>
+                </p-dropdown>
+                <small class="p-text-secondary">
+                    Optionnel - Icône représentative du type de compétence
+                </small>
+            </div>
+
+            <!-- Statut -->
+            <div class="field mb-4" *ngIf="isEditMode">
+                <label class="flex align-items-center">
+                    <p-checkbox formControlName="active" [binary]="true" inputId="active"></p-checkbox>
+                    <label for="active" class="ml-2">Actif</label>
+                </label>
+            </div>
+
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-text"
+                (click)="hideDialog()"></button>
+        <button pButton pRipple
+                label="Enregistrer"
+                icon="pi pi-check"
+                class="p-button-success"
+                (click)="saveSkillType()"
+                [disabled]="skillTypeForm.invalid || loading">
+            <i *ngIf="loading" class="pi pi-spin pi-spinner mr-2"></i>
+        </button>
+    </ng-template>
+</p-dialog>

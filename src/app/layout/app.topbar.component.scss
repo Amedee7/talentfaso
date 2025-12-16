@@ -1,0 +1,124 @@
+/* Styles pour le conteneur du menu utilisateur */
+.user-profile-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+/* Ajustements pour le menu tiered */
+:host ::ng-deep .p-tieredmenu {
+    min-width: 250px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+/* Styles pour les éléments du menu */
+:host ::ng-deep .p-tieredmenu .p-menuitem-link {
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin: 2px 4px;
+    transition: all 0.2s ease;
+}
+
+:host ::ng-deep .p-tieredmenu .p-menuitem-link:hover {
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+
+/* Style spécifique pour le bouton de déconnexion */
+:host ::ng-deep .logout-menu-item .p-menuitem-link {
+    color: #dc2626 !important;
+}
+
+:host ::ng-deep .logout-menu-item .p-menuitem-link:hover {
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+}
+
+/* Séparateurs dans le menu */
+:host ::ng-deep .p-tieredmenu .p-menu-separator {
+    margin: 0.5rem 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Header du menu (optionnel pour le profil) */
+.user-menu-header {
+    padding: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Avatar dans la barre supérieure */
+.user-avatar {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Section d'authentification */
+.auth-section {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Boutons de connexion/inscription */
+.auth-section .layout-topbar-button {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.auth-section .layout-topbar-button:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Version mobile */
+@media screen and (max-width: 960px) {
+    .user-info {
+        display: none;
+    }
+
+    .auth-section {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .auth-section .layout-topbar-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    :host ::ng-deep .p-tieredmenu {
+        position: fixed !important;
+        top: 70px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 300px !important;
+    }
+}
+
+/* Thème sombre */
+:host-context(.layout-dark) {
+    :host ::ng-deep .p-tieredmenu {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+
+    :host ::ng-deep .p-tieredmenu .p-menuitem-link:hover {
+        background-color: #374151;
+    }
+
+    .user-avatar {
+        border-color: #374151;
+    }
+}

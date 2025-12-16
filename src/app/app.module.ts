@@ -3,14 +3,16 @@ import { HashLocationStrategy, LocationStrategy, PathLocationStrategy } from '@a
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppLayoutModule } from './layout/app.layout.module';
-import { NotfoundComponent } from './demo/components/notfound/notfound.component';
-import { ProductService } from './demo/service/product.service';
-import { CountryService } from './demo/service/country.service';
-import { CustomerService } from './demo/service/customer.service';
-import { EventService } from './demo/service/event.service';
-import { IconService } from './demo/service/icon.service';
-import { NodeService } from './demo/service/node.service';
-import { PhotoService } from './demo/service/photo.service';
+import { NotfoundComponent } from './bo/components/notfound/notfound.component';
+import { ProductService } from './bo/service/product.service';
+import { CountryService } from './bo/service/country.service';
+import { CustomerService } from './bo/service/customer.service';
+import { EventService } from './bo/service/event.service';
+import { IconService } from './bo/service/icon.service';
+import { NodeService } from './bo/service/node.service';
+import { PhotoService } from './bo/service/photo.service';
+import {HTTP_INTERCEPTORS} from "@angular/common/http";
+import {AuthInterceptor} from "./bo/@core/auth.interceptor";
 
 @NgModule({
     declarations: [AppComponent, NotfoundComponent],
@@ -18,7 +20,12 @@ import { PhotoService } from './demo/service/photo.service';
     providers: [
         { provide: LocationStrategy, useClass: PathLocationStrategy },
         CountryService, CustomerService, EventService, IconService, NodeService,
-        PhotoService, ProductService
+        PhotoService, ProductService,
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true
+        }
     ],
     bootstrap: [AppComponent],
 })

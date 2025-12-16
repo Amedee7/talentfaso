@@ -1,0 +1,349 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card px-6 py-6">
+            <p-toast></p-toast>
+            <p-confirmDialog></p-confirmDialog>
+
+            <!-- Toolbar -->
+            <p-toolbar styleClass="mb-4">
+                <ng-template pTemplate="left">
+                    <div class="my-2 flex flex-wrap gap-2">
+                        <button pButton pRipple
+                                label="Nouveau Rôle"
+                                icon="pi pi-plus"
+                                class="p-button-success"
+                                (click)="openNew()"></button>
+
+                        <button pButton pRipple
+                                label="Supprimer la sélection"
+                                icon="pi pi-trash"
+                                class="p-button-danger"
+                                (click)="deleteSelectedRoles()"
+                                [disabled]="!selectedRoles.length"></button>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="right">
+                    <div class="flex flex-wrap gap-2">
+                        <button pButton pRipple
+                                label="Exporter CSV"
+                                icon="pi pi-download"
+                                class="p-button-help"
+                                (click)="dt?.exportCSV()"></button>
+                    </div>
+                </ng-template>
+            </p-toolbar>
+
+            <!-- Tableau des rôles -->
+            <p-table #dt
+                     [value]="roles"
+                     [loading]="loading"
+                     [lazy]="true"
+                     (onLazyLoad)="onLazyLoad($event)"
+                     [paginator]="true"
+                     [rows]="rowsPerPage"
+                     [totalRecords]="totalRecords"
+                     [rowsPerPageOptions]="[10,20,50]"
+                     [showCurrentPageReport]="true"
+                     currentPageReportTemplate="Affichage {first} à {last} sur {totalRecords} rôles"
+                     [globalFilterFields]="['name', 'displayName', 'description']"
+                     [(selection)]="selectedRoles"
+                     selectionMode="multiple"
+                     [rowHover]="true"
+                     dataKey="id">
+
+                <ng-template pTemplate="caption">
+                    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                        <h5 class="m-0">Gestion des Rôles</h5>
+                        <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
+                            <span class="p-input-icon-left">
+                                <i class="pi pi-search"></i>
+                                <input pInputText
+                                       type="text"
+                                       (input)="onGlobalFilter($event)"
+                                       placeholder="Rechercher..."
+                                       class="w-full sm:w-auto"/>
+                            </span>
+                        </div>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 3rem">
+                            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                        </th>
+                        <th pSortableColumn="displayName">
+                            Nom affiché <p-sortIcon field="displayName"></p-sortIcon>
+                        </th>
+                        <th pSortableColumn="name">
+                            Identifiant <p-sortIcon field="name"></p-sortIcon>
+                        </th>
+                        <th>Description</th>
+                        <th>Permissions</th>
+                        <th>Utilisateurs</th>
+                        <th pSortableColumn="createdAt">
+                            Créé le <p-sortIcon field="createdAt"></p-sortIcon>
+                        </th>
+                        <th pSortableColumn="active">
+                            Statut <p-sortIcon field="active"></p-sortIcon>
+                        </th>
+                        <th style="width: 150px">Actions</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-role>
+                    <tr>
+                        <td>
+                            <p-tableCheckbox [value]="role"></p-tableCheckbox>
+                        </td>
+                        <td>
+                            <span class="font-medium">{{role.displayName}}</span>
+                        </td>
+                        <td>
+                            <code class="text-sm bg-gray-100 px-2 py-1 rounded">{{role.name}}</code>
+                        </td>
+                        <td>
+                            <span class="text-gray-600 line-clamp-2" style="max-width: 200px;">
+                                {{role.description}}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-permission">
+                                {{getPermissionCount(role)}} permission(s)
+                            </span>
+                            <div *ngIf="role.permissions?.length > 0" class="mt-1">
+                                <small class="text-gray-500">
+                                    {{role.permissions.slice(0, 3).join(', ')}}
+                                    <span *ngIf="role.permissions.length > 3">...</span>
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-gray-600">{{role.userCount || 0}}</span>
+                        </td>
+                        <td>
+                            <span class="text-sm text-gray-500">
+                                {{formatDate(role.createdAt)}}
+                            </span>
+                        </td>
+                        <td>
+                            <span [class]="'badge ' + getRoleBadgeClass(role.active)">
+                                {{role.active ? 'Actif' : 'Inactif'}}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button pButton pRipple
+                                        icon="pi pi-pencil"
+                                        class="p-button-rounded p-button-success p-button-sm"
+                                        (click)="editRole(role)"
+                                        pTooltip="Modifier"
+                                        tooltipPosition="top"></button>
+
+                                <button pButton pRipple
+                                        [icon]="role.active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                                        [class]="role.active ? 'p-button-rounded p-button-warning p-button-sm' : 'p-button-rounded p-button-help p-button-sm'"
+                                        [pTooltip]="role.active ? 'Désactiver' : 'Activer'"
+                                        tooltipPosition="top"
+                                        (click)="toggleRoleStatus(role)"></button>
+
+                                <button pButton pRipple
+                                        icon="pi pi-trash"
+                                        class="p-button-rounded p-button-danger p-button-sm"
+                                        (click)="deleteRole(role)"
+                                        pTooltip="Supprimer"
+                                        tooltipPosition="top"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="9" class="text-center p-5">
+                            <div class="flex flex-column align-items-center">
+                                <i class="pi pi-shield text-4xl text-gray-400 mb-3"></i>
+                                <h4 class="text-gray-500 mb-2">
+                                    Aucun rôle trouvé
+                                </h4>
+                                <p class="text-gray-400">
+                                    Les rôles apparaîtront ici après leur création
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+</div>
+
+<!-- Dialog de création/édition de rôle -->
+<p-dialog [(visible)]="roleDialog"
+          [style]="{width: '800px', maxHeight: '90vh'}"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [breakpoints]="{'960px': '75vw', '640px': '90vw'}"
+          [styleClass]="'role-dialog'">
+
+    <ng-template pTemplate="header">
+        <span class="text-xl font-bold">
+            {{isEditMode ? 'Modifier' : 'Créer'}} un rôle
+        </span>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+        <form [formGroup]="roleForm" (ngSubmit)="saveRole()" class="p-fluid">
+
+            <!-- Informations de base -->
+            <div class="grid mb-4">
+                <div class="col-12 md:col-6">
+                    <div class="field">
+                        <label for="displayName">Nom affiché *</label>
+                        <input pInputText id="displayName" formControlName="displayName" class="w-full" />
+                        <small *ngIf="f['displayName'].invalid && (f['displayName'].dirty || f['displayName'].touched)"
+                               class="p-error">
+                            <span *ngIf="f['displayName'].errors?.['required']">Le nom affiché est requis</span>
+                            <span *ngIf="f['displayName'].errors?.['minlength']">Min. 3 caractères</span>
+                            <span *ngIf="f['displayName'].errors?.['maxlength']">Max. 100 caractères</span>
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-12 md:col-6">
+                    <div class="field">
+                        <label for="name">Identifiant *</label>
+                        <input pInputText id="name" formControlName="name" class="w-full" />
+                        <small *ngIf="f['name'].invalid && (f['name'].dirty || f['name'].touched)"
+                               class="p-error">
+                            <span *ngIf="f['name'].errors?.['required']">L'identifiant est requis</span>
+                            <span *ngIf="f['name'].errors?.['minlength']">Min. 3 caractères</span>
+                            <span *ngIf="f['name'].errors?.['pattern']">Format: lettres minuscules et underscores</span>
+                        </small>
+                        <small class="text-gray-500">
+                            Exemple: admin_manager, content_editor
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <div class="field">
+                    <label for="description">Description *</label>
+                    <textarea pInputTextarea id="description" formControlName="description"
+                              rows="3" class="w-full"></textarea>
+                    <small *ngIf="f['description'].invalid && (f['description'].dirty || f['description'].touched)"
+                           class="p-error">
+                        <span *ngIf="f['description'].errors?.['required']">La description est requise</span>
+                        <span *ngIf="f['description'].errors?.['minlength']">Min. 10 caractères</span>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Statut (seulement pour l'édition) -->
+            <div *ngIf="isEditMode" class="mb-4">
+                <div class="field flex align-items-center">
+                    <p-checkbox formControlName="active" [binary]="true" inputId="active"></p-checkbox>
+                    <label for="active" class="ml-2">Rôle actif</label>
+                </div>
+            </div>
+
+            <!-- Permissions -->
+            <div class="mb-4">
+                <h5 class="mt-0 mb-3">Permissions</h5>
+
+                <div *ngIf="permissionCategories.length === 0" class="p-3 surface-ground border-round">
+                    <p class="text-gray-600 m-0">Chargement des permissions...</p>
+                </div>
+
+                <!-- Navigation par catégories -->
+                <p-tabView *ngIf="permissionCategories.length > 0">
+                    <p-tabPanel *ngFor="let category of permissionCategories"
+                                [header]="getCategoryLabel(category)">
+
+                        <div class="mb-2 text-sm text-gray-600">
+                            {{getCategoryDescription(category)}}
+                        </div>
+
+                        <div class="grid">
+                            <div class="col-12 md:col-6" *ngFor="let permission of groupedPermissions[category]; let i = index">
+                                <div class="field-checkbox mb-3">
+                                    <p-checkbox [formControl]="permissionsArray.at(getPermissionIndex(permission.id))"
+                                                [binary]="true"
+                                                [inputId]="'perm_' + permission.id">
+                                    </p-checkbox>
+                                    <label [for]="'perm_' + permission.id" class="ml-2 cursor-pointer">
+                                        <div class="font-medium">{{permission.name}}</div>
+                                        <div class="text-sm text-gray-600">{{permission.description}}</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sélection/désélection rapide -->
+                        <div class="mt-3 pt-3 border-top-1 border-gray-200">
+                            <button pButton pRipple
+                                    type="button"
+                                    label="Tout sélectionner"
+                                    icon="pi pi-check-square"
+                                    class="p-button-text p-button-sm mr-2"
+                                    (click)="selectAllInCategory(category)"></button>
+                            <button pButton pRipple
+                                    type="button"
+                                    label="Tout désélectionner"
+                                    icon="pi pi-times-circle"
+                                    class="p-button-text p-button-sm"
+                                    (click)="deselectAllInCategory(category)"></button>
+                        </div>
+                    </p-tabPanel>
+                </p-tabView>
+
+                <!-- Résumé des permissions sélectionnées -->
+                <div *ngIf="getSelectedPermissionsCount() > 0" class="mt-4 p-3 surface-blue-50 border-round">
+                    <div class="flex align-items-center justify-content-between">
+                        <div>
+                            <i class="pi pi-check-circle text-blue-500 mr-2"></i>
+                            <span class="font-medium">{{getSelectedPermissionsCount()}} permission(s) sélectionnée(s)</span>
+                        </div>
+                        <button pButton pRipple
+                                type="button"
+                                label="Voir la liste"
+                                icon="pi pi-list"
+                                class="p-button-text p-button-sm"
+                                (click)="showSelectedPermissions = !showSelectedPermissions"></button>
+                    </div>
+
+                    <div *ngIf="showSelectedPermissions" class="mt-3">
+                        <div class="flex flex-wrap gap-2">
+                            <span *ngFor="let permissionId of getSelectedPermissionIds()"
+                                  class="inline-flex align-items-center gap-1 px-2 py-1 surface-blue-100 text-blue-800 border-round text-xs">
+                                <i class="pi pi-key"></i>
+                                {{getPermissionName(permissionId)}}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-text"
+                (click)="roleDialog = false"></button>
+        <button pButton pRipple
+                label="Enregistrer"
+                icon="pi pi-check"
+                class="p-button-success"
+                (click)="saveRole()"
+                [disabled]="roleForm.invalid || loading">
+            <i *ngIf="loading" class="pi pi-spin pi-spinner mr-2"></i>
+        </button>
+    </ng-template>
+</p-dialog>
