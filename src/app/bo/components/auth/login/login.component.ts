@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import { LayoutService } from 'src/app/layout/service/app.layout.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import {ApisAuthService, User} from "../../../service/apis-auth.service";
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {ConfirmationService, MessageService} from "primeng/api";
@@ -25,22 +25,32 @@ export class LoginComponent implements OnInit {
     // Message d'erreur général
     generalErrorMessage: string | null = null;
 
+    // Ajoutez cette propriété pour stocker l'URL de retour
+    returnUrl: string = '/dashboard';
+
     constructor(
         public layoutService: LayoutService,
         private apiService: ApisAuthService,
         private router: Router,
+        private route: ActivatedRoute,
         private fb: FormBuilder,
-        private messageService: MessageService
+        private messageService: MessageService,
     ) {
     }
+
 
     ngOnInit() {
         this.initForm();
 
-        // Vérifier si l'utilisateur est déjà connecté
+        // Récupérer l'URL de retour depuis les query params
+        this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+
+        console.log('URL de retour détectée:', this.returnUrl);
+
+        // Vérifier si l'utilisateur est déjà connecté (gardez cette logique)
         if (this.apiService.isAuthenticated()) {
-            const returnUrl = this.getReturnUrl();
-            this.router.navigate([returnUrl || '/']);
+            console.log('Utilisateur déjà connecté, redirection vers:', this.returnUrl);
+            this.router.navigate([this.returnUrl]);
             return;
         }
 
@@ -225,47 +235,6 @@ export class LoginComponent implements OnInit {
     }
 
 
-
-// Méthode pour rediriger en fonction du rôle
-    private redirectBasedOnRole(user: User): void {
-        this.loading = false;
-
-        // Récupérer l'URL de retour
-        const returnUrl = this.getReturnUrl();
-
-        // Délai pour laisser voir le message de succès
-        setTimeout(() => {
-            // Redirection par rôle
-            switch (user.role) {
-                case 'ADMIN':
-                    this.router.navigate([returnUrl || '/admin/dashboard']);
-                    break;
-
-                case 'RECRUITER':
-                    // Vérifier si le recruteur a complété son profil
-                    if (!user.companyName || !user.position) {
-                        this.messageService.add({
-                            severity: 'info',
-                            summary: 'Profil incomplet',
-                            detail: 'Complétez votre profil pour une meilleure expérience',
-                            life: 4000
-                        });
-                        this.router.navigate(['/recruiter/profile-setup']);
-                    } else {
-                        this.router.navigate([returnUrl || '/recruiter/dashboard']);
-                    }
-                    break;
-
-                case 'JOB_SEEKER':
-                    this.router.navigate([returnUrl || '/candidate/dashboard']);
-                    break;
-
-                default:
-                    this.router.navigate([returnUrl || '/']);
-            }
-        }, 1000);
-    }
-
 // Gestion améliorée des erreurs
 // login.component.ts - méthode handleLoginError améliorée
     private handleLoginError(error: any): void {
@@ -380,5 +349,54 @@ export class LoginComponent implements OnInit {
 
         // Vous pouvez utiliser un service comme ui-avatars.com
         return `https://ui-avatars.com/api/?name=${initials}&background=2196F3&color=fff&size=128`;
+    }
+
+
+    // Mettez à jour la méthode redirectBasedOnRole :
+    private redirectBasedOnRole(user: User): void {
+        this.loading = false;
+
+        console.log('Redirection après connexion, returnUrl:', this.returnUrl);
+
+        // Délai pour laisser voir le message de succès
+        setTimeout(() => {
+            // Vérifiez si l'URL de retour est valide et accessible pour le rôle
+            let finalUrl = this.returnUrl;
+
+            // Si l'URL de retour n'est pas valide ou inaccessible, utilisez l'URL par défaut selon le rôle
+            if (!this.isUrlAccessibleForRole(this.returnUrl, user.role)) {
+                finalUrl = this.getDefaultUrlForRole(user.role);
+            }
+
+            this.router.navigate([finalUrl]);
+        }, 1000);
+    }
+
+    // Méthode pour vérifier si une URL est accessible pour un rôle
+    private isUrlAccessibleForRole(url: string, role: string): boolean {
+        // Liste des chemins par rôle
+        const adminPaths = ['/dashboard', '/admin', '/users-management', '/roles-management', '/skill-types-management'];
+        const recruiterPaths = ['/dashboard', '/recruiter'];
+        const jobSeekerPaths = ['/dashboard', '/candidate'];
+
+        const allowedPaths = role === 'ADMIN' ? adminPaths :
+            role === 'RECRUITER' ? recruiterPaths :
+                role === 'JOB_SEEKER' ? jobSeekerPaths : [];
+
+        return allowedPaths.some(path => url.startsWith(path));
+    }
+
+    // Méthode pour obtenir l'URL par défaut selon le rôle
+    private getDefaultUrlForRole(role: string): string {
+        switch (role) {
+            case 'ADMIN':
+                return '/dashboard';
+            case 'RECRUITER':
+                return '/dashboard';
+            case 'JOB_SEEKER':
+                return '/dashboard';
+            default:
+                return '/dashboard';
+        }
     }
 }

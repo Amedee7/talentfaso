@@ -12,7 +12,7 @@ import { ApisAuthService } from "../service/apis-auth.service";
 @Injectable({
     providedIn: 'root'
 })
-export class AuthGuard implements CanActivate {
+export class LoginGuard implements CanActivate {
 
     constructor(
         private authService: ApisAuthService,
@@ -24,22 +24,13 @@ export class AuthGuard implements CanActivate {
         state: RouterStateSnapshot
     ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
 
-        console.log('AuthGuard: Vérification de l\'authentification pour', state.url);
-
-        // Vérifier si l'utilisateur est authentifié
+        // Si l'utilisateur est déjà authentifié, rediriger vers le dashboard
         if (this.authService.isAuthenticated()) {
-            console.log('AuthGuard: Utilisateur authentifié, accès autorisé');
-            return true;
+            const returnUrl = route.queryParams['returnUrl'];
+            return this.router.createUrlTree([returnUrl || '/dashboard']);
         }
 
-        console.log('AuthGuard: Utilisateur non authentifié, redirection vers login');
-
-        // Rediriger vers la page de login avec l'URL de retour
-        return this.router.createUrlTree(['/auth/login'], {
-            queryParams: {
-                returnUrl: state.url,
-                reason: 'not_authenticated'
-            }
-        });
+        // Si non authentifié, autoriser l'accès au login
+        return true;
     }
 }

@@ -27,16 +27,16 @@ export class AppMenuComponent implements OnInit {
                     {
                         label: 'Utilisateurs',
                         icon: 'pi pi-fw pi-users',
-                        routerLink: ['/pages/users-management']
+                        routerLink: ['/users-management']
                     },
                     {
                         label: 'Roles',
                         icon: 'pi pi-fw pi-list',
-                        routerLink: ['/pages/roles-management']
+                        routerLink: ['/roles-management']
                     },{
                         label: 'Competences',
                         icon: 'pi pi-fw pi-list',
-                        routerLink: ['/pages/skill-types-management']
+                        routerLink: ['/skill-types-management']
                     }
                 ]
             }

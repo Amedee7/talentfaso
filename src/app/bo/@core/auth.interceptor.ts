@@ -6,16 +6,13 @@ import {
     HttpInterceptor,
     HttpErrorResponse
 } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, filter, take, switchMap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import {ApisAuthService} from "../service/apis-auth.service";
+import { ApisAuthService } from "../service/apis-auth.service";
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-
-    private isRefreshing = false;
-    private refreshTokenSubject = new BehaviorSubject<any>(null);
 
     constructor(
         private authService: ApisAuthService,
@@ -33,24 +30,43 @@ export class AuthInterceptor implements HttpInterceptor {
         // Gérer la réponse
         return next.handle(request).pipe(
             catchError((error: HttpErrorResponse) => {
+                // Ne pas intercepter les erreurs des endpoints d'authentification
+                if (request.url.includes('/auth/')) {
+                    return throwError(() => error);
+                }
+
                 // Gérer les erreurs 401 (non autorisé)
                 if (error.status === 401) {
-                    // Tentative de rafraîchissement du token (si implémenté)
-                    // return this.handle401Error(request, next);
+                    console.log('Interceptor: Erreur 401 détectée, déconnexion...');
 
-                    // Sinon, déconnecter l'utilisateur
+                    // Déconnecter l'utilisateur
                     this.authService.logout();
-                    this.router.navigate(['/auth/login'], {
-                        queryParams: {
-                            returnUrl: this.router.routerState.snapshot.url,
-                            sessionExpired: true
-                        }
-                    });
+
+                    // Rediriger vers le login avec l'URL actuelle
+                    const currentUrl = this.router.routerState.snapshot.url;
+
+                    // Éviter de rediriger vers le login si on y est déjà
+                    if (!currentUrl.includes('/auth/login')) {
+                        this.router.navigate(['/auth/login'], {
+                            queryParams: {
+                                returnUrl: currentUrl,
+                                sessionExpired: true
+                            },
+                            replaceUrl: true
+                        });
+                    }
                 }
 
                 // Gérer les erreurs 403 (accès refusé)
                 if (error.status === 403) {
-                    this.router.navigate(['/access-denied']);
+                    console.log('Interceptor: Erreur 403 détectée, accès refusé');
+
+                    // Rediriger vers la page d'accès refusé
+                    this.router.navigate(['/access-denied'], {
+                        queryParams: {
+                            returnUrl: this.router.routerState.snapshot.url
+                        }
+                    });
                 }
 
                 return throwError(() => error);
@@ -61,38 +77,8 @@ export class AuthInterceptor implements HttpInterceptor {
     private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
         return request.clone({
             setHeaders: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
+                Authorization: `Bearer ${token}`
             }
         });
-    }
-
-    // Méthode optionnelle pour rafraîchir le token
-    private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        if (!this.isRefreshing) {
-            this.isRefreshing = true;
-            this.refreshTokenSubject.next(null);
-
-            // Appeler votre API de rafraîchissement de token si disponible
-            // return this.authService.refreshToken().pipe(
-            //   switchMap((token: any) => {
-            //     this.isRefreshing = false;
-            //     this.refreshTokenSubject.next(token.access_token);
-            //     return next.handle(this.addToken(request, token.access_token));
-            //   }),
-            //   catchError((err) => {
-            //     this.isRefreshing = false;
-            //     this.authService.logout();
-            //     return throwError(() => err);
-            //   })
-            // );
-        }
-
-        return this.refreshTokenSubject.pipe(
-            filter(token => token !== null),
-            take(1),
-            switchMap(token => next.handle(this.addToken(request, token)))
-        );
     }
 }
