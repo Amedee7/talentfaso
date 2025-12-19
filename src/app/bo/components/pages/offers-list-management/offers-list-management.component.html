@@ -1,0 +1,520 @@
+<div class="grid">
+    <div class="col-12">
+
+        <p-toast></p-toast>
+        <p-confirmDialog></p-confirmDialog>
+
+        <div class="card px-6 py-6">
+
+            <!-- Statistiques (optionnel) -->
+            <div *ngIf="isRecruiterView && offers.length > 0" class="mt-6">
+                <h5>Statistiques</h5>
+                <div class="grid">
+                    <div class="col-6 md:col-3">
+                        <div class="surface-card p-4 border-round text-center">
+                            <i class="pi pi-eye text-blue-500 text-2xl mb-2"></i>
+                            <div class="text-900 font-bold text-xl">{{getTotalViews()}}</div>
+                            <div class="text-600">Vues totales</div>
+                        </div>
+                    </div>
+                    <div class="col-6 md:col-3">
+                        <div class="surface-card p-4 border-round text-center">
+                            <i class="pi pi-users text-green-500 text-2xl mb-2"></i>
+                            <div class="text-900 font-bold text-xl">{{getTotalApplications()}}</div>
+                            <div class="text-600">Candidatures</div>
+                        </div>
+                    </div>
+                    <div class="col-6 md:col-3">
+                        <div class="surface-card p-4 border-round text-center">
+                            <i class="pi pi-globe text-orange-500 text-2xl mb-2"></i>
+                            <div class="text-900 font-bold text-xl">{{getPublishedCount()}}</div>
+                            <div class="text-600">Publiées</div>
+                        </div>
+                    </div>
+                    <div class="col-6 md:col-3">
+                        <div class="surface-card p-4 border-round text-center">
+                            <i class="pi pi-star text-purple-500 text-2xl mb-2"></i>
+                            <div class="text-900 font-bold text-xl">{{getFeaturedCount()}}</div>
+                            <div class="text-600">En avant</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card px-6 py-6">
+
+            <!-- Header avec titre et actions -->
+            <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center mb-4">
+                <div>
+                    <h2 class="m-0">
+                        <i class="pi pi-briefcase mr-2"></i>
+                        {{isRecruiterView ? 'Mes offres' : 'Offres d\'emploi'}}
+                    </h2>
+                    <p class="text-gray-600 mt-2">
+                        {{isRecruiterView ? 'Gérez vos offres d\'emploi' : 'Découvrez les meilleures opportunités'}}
+                    </p>
+                </div>
+
+                <div class="mt-3 md:mt-0">
+                    <button pButton pRipple
+                            label="Nouvelle offre"
+                            icon="pi pi-plus"
+                            class="p-button-success"
+                            *ngIf="isRecruiterView"
+                            routerLink="/offers/create">
+                    </button>
+
+                    <button pButton pRipple
+                            label="Filtres"
+                            icon="pi pi-filter"
+                            class="p-button-outlined ml-2"
+                            (click)="showFilters = !showFilters">
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtres avancés -->
+            <div *ngIf="showFilters" class="mb-6 p-4 surface-ground border-round">
+                <h5 class="mt-0 mb-4">Filtres avancés</h5>
+
+                <div class="grid">
+                    <!-- Type d'emploi -->
+                    <div class="col-12 md:col-6 lg:col-3">
+                        <label class="block mb-2 font-medium">Type d'emploi</label>
+                        <p-multiSelect [options]="jobTypes"
+                                       [(ngModel)]="filters.jobType"
+                                       optionLabel="label"
+                                       optionValue="value"
+                                       placeholder="Tous les types"
+                                       class="w-full"
+                                            appendTo="body">
+                        </p-multiSelect>
+                    </div>
+
+                    <!-- Localisation -->
+                    <div class="col-12 md:col-6 lg:col-3">
+                        <label class="block mb-2 font-medium">Localisation</label>
+                        <input pInputText
+                               [(ngModel)]="filters.location"
+                               placeholder="Ville, région..."
+                               class="w-full">
+                    </div>
+
+                    <!-- Salaire minimum -->
+                    <div class="col-12 md:col-6 lg:col-3">
+                        <label class="block mb-2 font-medium">Salaire minimum</label>
+                        <p-inputNumber [(ngModel)]="filters.minSalary"
+                                       mode="currency"
+                                       currency="XOF"
+                                       class="w-full">
+                        </p-inputNumber>
+                    </div>
+
+                    <!-- Expérience -->
+                    <div class="col-12 md:col-6 lg:col-3">
+                        <label class="block mb-2 font-medium">Expérience</label>
+                        <p-dropdown [options]="experienceLevels"
+                                    [(ngModel)]="filters.experienceMin"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Niveau d'expérience"
+                                    class="w-full">
+                        </p-dropdown>
+                    </div>
+
+                    <!-- Travail à distance -->
+                    <div class="col-12 md:col-6 lg:col-3">
+                        <div class="field-checkbox mt-4">
+                            <p-checkbox [(ngModel)]="filters.remoteAllowed"
+                                        [binary]="true"
+                                        inputId="remote">
+                            </p-checkbox>
+                            <label for="remote" class="ml-2">Télétravail possible</label>
+                        </div>
+                    </div>
+
+                    <!-- Offres urgentes -->
+                    <div class="col-12 md:col-6 lg:col-3">
+                        <div class="field-checkbox mt-4">
+                            <p-checkbox [(ngModel)]="filters.isUrgent"
+                                        [binary]="true"
+                                        inputId="urgent">
+                            </p-checkbox>
+                            <label for="urgent" class="ml-2">Offres urgentes seulement</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action des filtres -->
+                <div class="flex justify-content-end gap-2 mt-4">
+                    <button pButton pRipple
+                            label="Réinitialiser"
+                            icon="pi pi-refresh"
+                            class="p-button-text"
+                            (click)="resetFilters()">
+                    </button>
+
+                    <button pButton pRipple
+                            label="Appliquer"
+                            icon="pi pi-check"
+                            class="p-button-primary"
+                            (click)="applyFilters()">
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toolbar avec recherche et tri -->
+            <p-toolbar styleClass="mb-4">
+                <ng-template pTemplate="left">
+                    <div class="flex flex-wrap gap-2">
+                        <span class="p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <input pInputText
+                                   type="text"
+                                   (input)="onGlobalFilter($event)"
+                                   placeholder="Rechercher..."
+                                   class="w-full sm:w-auto"/>
+                        </span>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="right">
+                    <div class="flex flex-wrap gap-2">
+                        <p-dropdown [options]="sortOptions"
+                                    [(ngModel)]="selectedSort"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Trier par"
+                                    (onChange)="onSortChange()"
+                                    styleClass="w-full sm:w-auto">
+                        </p-dropdown>
+
+                        <button pButton pRipple
+                                label="Exporter"
+                                icon="pi pi-download"
+                                class="p-button-help"
+                                (click)="dt?.exportCSV()">
+                        </button>
+                    </div>
+                </ng-template>
+            </p-toolbar>
+
+            <!-- Tableau des offres -->
+            <!-- offers-list.component.html - Partie tableau seulement -->
+            <p-table #dt
+                     [value]="offers"
+                     [loading]="loading"
+                     [lazy]="true"
+                     (onLazyLoad)="onLazyLoad($event)"
+                     [paginator]="true"
+                     [rows]="rowsPerPage"
+                     [totalRecords]="totalRecords"
+                     [rowsPerPageOptions]="[10,20,50]"
+                     [showCurrentPageReport]="true"
+                     currentPageReportTemplate="Affichage {first} à {last} sur {totalRecords} offres"
+                     [globalFilterFields]="['title', 'companyName', 'location', 'skillsRequired', 'recruiterName']"
+                     [(selection)]="selectedOffers"
+                     selectionMode="multiple"
+                     [rowHover]="true"
+                     dataKey="id"
+                     styleClass="p-datatable-sm">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <!-- Colonne 1: Poste et informations principales -->
+                        <th style="min-width: 250px">Poste</th>
+
+                        <!-- Colonne 2: Entreprise et recruteur -->
+                        <th style="min-width: 180px">Entreprise / Recruteur</th>
+
+                        <!-- Colonne 3: Localisation -->
+                        <th style="min-width: 120px">Localisation</th>
+
+                        <!-- Colonne 4: Salaire -->
+                        <th style="min-width: 140px">Salaire</th>
+
+                        <!-- Colonne 5: Type et expérience -->
+                        <th style="min-width: 120px">Type / Expérience</th>
+
+                        <!-- Colonne 6: Statut (seulement pour recruteur) -->
+                        <th style="min-width: 100px" *ngIf="isRecruiterView">Statut</th>
+
+                        <!-- Colonne 7: Dates -->
+                        <th style="min-width: 150px">Dates</th>
+
+                        <!-- Colonne 9: Actions -->
+                        <th style="width: 180px; min-width: 180px">Actions</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-offer>
+                    <tr>
+                        <!-- Colonne 1: Poste et informations principales -->
+                        <td>
+                            <div class="flex flex-column gap-1">
+                                <!-- Titre de l'offre -->
+                                <a [routerLink]="['/offers-list-management', offer.id]"
+                                   class="font-bold text-blue-700 hover:text-blue-900 no-underline line-clamp-1">
+                                    {{offer.title}}
+                                </a>
+
+                                <!-- Description courte -->
+                                <p class="text-sm text-gray-600 line-clamp-2 mb-2">
+                                    {{offer.description | slice:0:120}}...
+                                </p>
+
+                                <!-- Compétences -->
+                                <div class="flex flex-wrap gap-1 mb-2">
+                        <span *ngFor="let skill of getSkillsArray(offer)"
+                              class="skill-badge">
+                            {{skill}}
+                        </span>
+                                </div>
+
+                                <!-- Badges d'état -->
+                                <div class="flex flex-wrap gap-1">
+                        <span *ngIf="offer.isUrgent" class="badge badge-urgent">
+                            <i class="pi pi-bolt mr-1"></i>Urgent
+                        </span>
+                                    <span *ngIf="offer.isFeatured" class="badge badge-featured">
+                            <i class="pi pi-star mr-1"></i>À la une
+                        </span>
+                                    <span *ngIf="offer.remoteAllowed" class="badge badge-remote">
+                            <i class="pi pi-wifi mr-1"></i>Télétravail
+                        </span>
+                                    <span *ngIf="isOfferExpired(offer)" class="badge badge-expired">
+                            <i class="pi pi-clock mr-1"></i>Expiré
+                        </span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Colonne 2: Entreprise et recruteur -->
+                        <td>
+                            <div class="flex flex-column gap-2">
+                                <!-- Nom de l'entreprise -->
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-building text-gray-500"></i>
+                                    <span class="font-medium">{{offer.companyName || 'Non spécifié'}}</span>
+                                </div>
+
+                                <!-- Nom du recruteur -->
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-user text-gray-500"></i>
+                                    <span class="text-sm text-gray-700">{{offer.recruiterName}}</span>
+                                </div>
+
+                                <!-- Type de contrat -->
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-briefcase text-gray-500"></i>
+                                    <span class="text-sm">{{getJobTypeLabel(offer.jobType)}}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Colonne 3: Localisation -->
+                        <td>
+                            <div class="flex flex-column gap-1">
+                                <div class="flex align-items-center gap-1">
+                                    <i class="pi pi-map-marker text-gray-500"></i>
+                                    <span class="font-medium">{{offer.city || offer.location}}</span>
+                                </div>
+                                <div class="text-sm text-gray-600">{{offer.country}}</div>
+                                <div *ngIf="offer.remoteAllowed" class="text-xs text-green-600 mt-1">
+                                    <i class="pi pi-check-circle mr-1"></i>Télétravail accepté
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Colonne 4: Salaire -->
+                        <td>
+                            <div class="flex flex-column gap-1">
+                                <div class="flex align-items-center gap-1">
+                                    <i class="pi pi-money-bill text-gray-500"></i>
+                                    <span class="font-bold text-green-700">{{getSalaryRange(offer)}}</span>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    {{offer.salaryCurrency}}
+                                </div>
+                                <div *ngIf="offer.experienceRequired > 0" class="text-xs text-gray-600 mt-1">
+                                    <i class="pi pi-chart-line mr-1"></i>
+                                    Exp: {{offer.experienceRequired}} an(s)
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Colonne 5: Type et expérience -->
+                        <td>
+                            <div class="flex flex-column gap-2">
+                                <!-- Type de contrat -->
+                                <span class="badge badge-job-type">
+                        {{getJobTypeLabel(offer.jobType)}}
+                    </span>
+
+                                <!-- Niveau d'éducation -->
+                                <div *ngIf="offer.educationLevel" class="flex align-items-center gap-1">
+                                    <i class="pi pi-graduation-cap text-gray-500 text-sm"></i>
+                                    <span class="text-sm">{{offer.educationLevel}}</span>
+                                </div>
+
+                                <!-- Expérience requise -->
+                                <div class="flex align-items-center gap-1">
+                                    <i class="pi pi-calendar text-gray-500 text-sm"></i>
+                                    <span class="text-sm">{{offer.experienceRequired || 0}} an(s) min.</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Colonne 6: Statut (seulement pour recruteur) -->
+                        <td *ngIf="isRecruiterView">
+                            <div class="flex flex-column gap-1">
+                    <span [class]="'status-badge ' + offer.status.toLowerCase()">
+                        {{getStatusLabel(offer.status)}}
+                    </span>
+
+                                <!-- Date de publication -->
+                                <div *ngIf="offer.publishedAt" class="text-xs text-gray-500">
+                                    Publié: {{formatDate(offer.publishedAt)}}
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Colonne 7: Dates -->
+                        <td>
+                            <div class="flex flex-column gap-2">
+                                <!-- Date de début -->
+                                <div>
+                                    <div class="text-xs text-gray-500">Début:</div>
+                                    <div class="text-sm font-medium">{{formatDate(offer.startDate)}}</div>
+                                </div>
+
+                                <!-- Date limite -->
+                                <div>
+                                    <div class="text-xs text-gray-500">Clôture:</div>
+                                    <div [ngClass]="{'text-red-600 font-bold': isOfferExpired(offer), 'text-sm font-medium': true}">
+                                        {{formatDate(offer.applicationDeadline)}}
+                                    </div>
+                                </div>
+
+                                <!-- Créé le -->
+                                <div class="text-xs text-gray-400">
+                                    Créé: {{formatDate(offer.createdAt)}}
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Colonne 9: Actions -->
+                        <td>
+                            <div class="flex flex-column gap-2">
+                                <!-- Bouton principal (Voir) -->
+                                <button pButton pRipple
+                                        icon="pi pi-eye"
+                                        class="p-button-info p-button-sm w-full"
+                                        (click)="viewOffer(offer)"
+                                        pTooltip="Voir les détails"
+                                        tooltipPosition="top">
+                                </button>
+
+                                <!-- Actions supplémentaires pour recruteurs et admin -->
+                                <div *ngIf="isRecruiterView" class="flex gap-1">
+                                    <!-- Éditer - seulement si propriétaire ou admin -->
+                                    <button pButton pRipple
+                                            icon="pi pi-pencil"
+                                            class="p-button-warning p-button-sm flex-1"
+                                            [disabled]="!isOfferOwner(offer) && !isAdmin()"
+                                            (click)="editOffer(offer)"
+                                            pTooltip="Modifier"
+                                            tooltipPosition="top">
+                                    </button>
+                                </div>
+
+                                <!-- Actions rapides pour admin seulement -->
+                                <div *ngIf="isAdmin()" class="flex gap-1">
+                                    <!-- Changer statut -->
+                                    <button pButton pRipple
+                                            [icon]="offer.status === 'PUBLISHED' ? 'pi pi-lock' : 'pi pi-globe'"
+                                            [class]="offer.status === 'PUBLISHED' ? 'p-button-secondary p-button-sm' : 'p-button-success p-button-sm'"
+                                            class="flex-1"
+                                            (click)="toggleOfferStatus(offer)"
+                                            pTooltip="Changer statut"
+                                            tooltipPosition="top">
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td [attr.colspan]="isRecruiterView ? 9 : 8" class="text-center p-5">
+                            <div class="flex flex-column align-items-center">
+                                <i class="pi pi-briefcase text-4xl text-gray-400 mb-3"></i>
+                                <h4 class="text-gray-500 mb-2">
+                                    Aucune offre trouvée
+                                </h4>
+                                <p class="text-gray-400 mb-4">
+                                    {{isRecruiterView ?
+                                    'Créez votre première offre pour commencer à recruter' :
+                                    'Aucune offre ne correspond à vos critères de recherche'}}
+                                </p>
+
+                                <div class="flex gap-3">
+                                    <button pButton pRipple
+                                            label="Créer une offre"
+                                            icon="pi pi-plus"
+                                            class="p-button-success"
+                                            *ngIf="isRecruiterView"
+                                            routerLink="/offers/create">
+                                    </button>
+
+                                    <button pButton pRipple
+                                            label="Réinitialiser les filtres"
+                                            icon="pi pi-refresh"
+                                            class="p-button-outlined"
+                                            (click)="resetFilters()"
+                                            *ngIf="!isRecruiterView">
+                                    </button>
+
+                                    <button pButton pRipple
+                                            label="Explorer toutes les offres"
+                                            icon="pi pi-search"
+                                            class="p-button-primary"
+                                            routerLink="/offers"
+                                            *ngIf="!isRecruiterView">
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <!-- Template pour le pied de tableau -->
+                <ng-template pTemplate="footer">
+                    <div class="flex justify-content-between align-items-center p-3">
+                        <div class="text-gray-600">
+                            {{offers.length}} offre(s) affichée(s)
+                        </div>
+                        <div class="flex gap-2">
+                            <button pButton pRipple
+                                    label="Exporter CSV"
+                                    icon="pi pi-download"
+                                    class="p-button-outlined p-button-sm"
+                                    (click)="exportToCSV()">
+                            </button>
+
+                            <button pButton pRipple
+                                    label="Actualiser"
+                                    icon="pi pi-refresh"
+                                    class="p-button-outlined p-button-sm"
+                                    (click)="loadOffers()">
+                            </button>
+                        </div>
+                    </div>
+                </ng-template>
+            </p-table>
+
+        </div>
+    </div>
+</div>

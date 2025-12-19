@@ -1,0 +1,410 @@
+<div class="grid">
+    <div class="col-12">
+        <!-- En-tête -->
+        <div class="mb-4">
+            <button pButton pRipple
+                    icon="pi pi-arrow-left"
+                    label="Retour"
+                    class="p-button-text"
+                    (click)="onCancel()">
+            </button>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {{isEditMode ? 'Modifier l\'offre' : 'Créer une nouvelle offre'}}
+            </h1>
+            <p class="text-gray-600">
+                {{isEditMode ? 'Modifiez les informations de votre offre d\'emploi' : 'Remplissez le formulaire pour créer une nouvelle offre d\'emploi'}}
+            </p>
+        </div>
+
+        <!-- Message de chargement -->
+        <div *ngIf="loading" class="text-center p-5">
+            <p-progressSpinner></p-progressSpinner>
+            <p class="mt-3">Chargement...</p>
+        </div>
+
+        <!-- Informations de débogage -->
+        <div *ngIf="!loading" class="mb-3 p-3 surface-section border-round">
+            <div class="flex align-items-center gap-3">
+                <span class="ml-3">Champs invalides: {{getInvalidFieldCount()}}</span>
+            </div>
+        </div>
+
+        <!-- Formulaire -->
+        <form [formGroup]="offerForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+            <p-toast></p-toast>
+
+            <div class="surface-card border-round p-5">
+                <!-- Informations de base -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="pi pi-info-circle mr-2"></i>
+                        Informations de base
+                    </h3>
+
+                    <div class="grid">
+                        <!-- Titre -->
+                        <div class="col-12 mb-4">
+                            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                                Titre du poste *
+                            </label>
+                            <input pInputText id="title" formControlName="title"
+                                   class="w-full"
+                                   placeholder="Ex: Développeur Full Stack Senior">
+                            <small *ngIf="title?.invalid && (title?.touched || title?.dirty)" class="p-error block">
+                                <span *ngIf="title?.errors?.['required']">Le titre est requis</span>
+                                <span *ngIf="title?.errors?.['minlength']">Minimum 5 caractères</span>
+                                <span *ngIf="title?.errors?.['maxlength']">Maximum 200 caractères</span>
+                            </small>
+                        </div>
+
+                        <!-- Entreprise -->
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="companyName" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nom de l'entreprise *
+                            </label>
+                            <input pInputText id="companyName" formControlName="companyName"
+                                   class="w-full"
+                                   placeholder="Ex: TechCorp Inc.">
+                            <small *ngIf="companyName?.invalid && (companyName?.touched || companyName?.dirty)" class="p-error block">
+                                <span *ngIf="companyName?.errors?.['required']">Le nom de l'entreprise est requis</span>
+                            </small>
+                        </div>
+
+                        <!-- Type de contrat -->
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="jobType" class="block text-sm font-medium text-gray-700 mb-2">
+                                Type de contrat *
+                            </label>
+                            <p-dropdown id="jobType" formControlName="jobType"
+                                        [options]="jobTypes"
+                                        placeholder="Sélectionnez un type"
+                                        class="w-full"
+                                        [styleClass]="jobType?.invalid && (jobType?.touched || jobType?.dirty) ? 'p-invalid' : ''">
+                            </p-dropdown>
+                        </div>
+
+                        <!-- Localisation -->
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
+                                Ville *
+                            </label>
+                            <input pInputText id="city" formControlName="city"
+                                   class="w-full"
+                                   placeholder="Ex: Paris">
+                            <small *ngIf="city?.invalid && (city?.touched || city?.dirty)" class="p-error block">
+                                <span *ngIf="city?.errors?.['required']">La ville est requise</span>
+                            </small>
+                        </div>
+
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
+                                Pays *
+                            </label>
+                            <input pInputText id="country" formControlName="country"
+                                   class="w-full"
+                                   placeholder="Ex: France">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Salaire -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="pi pi-money-bill mr-2"></i>
+                        Rémunération
+                    </h3>
+
+                    <div class="grid">
+                        <!-- Devise -->
+                        <div class="col-12 md:col-3 mb-4">
+                            <label for="salaryCurrency" class="block text-sm font-medium text-gray-700 mb-2">
+                                Devise *
+                            </label>
+                            <p-dropdown id="salaryCurrency" formControlName="salaryCurrency"
+                                        [options]="currencies"
+                                        class="w-full">
+                            </p-dropdown>
+                        </div>
+
+                        <!-- Salaire minimum -->
+                        <div class="col-12 md:col-4 mb-4">
+                            <label for="salaryMin" class="block text-sm font-medium text-gray-700 mb-2">
+                                Salaire minimum *
+                            </label>
+                            <p-inputNumber id="salaryMin" formControlName="salaryMin"
+                                           [mode]="'decimal'"
+                                           [min]="0"
+                                           [maxFractionDigits]="0"
+                                           class="w-full"
+                                           placeholder="Ex: 35000"
+                                           inputId="salaryMinInput">
+                            </p-inputNumber>
+                            <small *ngIf="salaryMin?.invalid && (salaryMin?.touched || salaryMin?.dirty)" class="p-error block">
+                                <span *ngIf="salaryMin?.errors?.['required']">Le salaire minimum est requis</span>
+                                <span *ngIf="salaryMin?.errors?.['min']">Doit être positif</span>
+                            </small>
+                        </div>
+
+                        <!-- Salaire maximum -->
+                        <div class="col-12 md:col-5 mb-4">
+                            <label for="salaryMax" class="block text-sm font-medium text-gray-700 mb-2">
+                                Salaire maximum (optionnel)
+                            </label>
+                            <p-inputNumber id="salaryMax" formControlName="salaryMax"
+                                           [mode]="'decimal'"
+                                           [min]="0"
+                                           [maxFractionDigits]="0"
+                                           class="w-full"
+                                           placeholder="Ex: 45000"
+                                           inputId="salaryMaxInput">
+                            </p-inputNumber>
+                            <small *ngIf="offerForm.errors?.['salaryRangeInvalid']" class="p-error block">
+                                Le salaire maximum doit être supérieur ou égal au salaire minimum
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description et exigences -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="pi pi-file-edit mr-2"></i>
+                        Description détaillée
+                    </h3>
+
+                    <div class="grid">
+                        <!-- Description -->
+                        <div class="col-12 mb-4">
+                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                                Description du poste *
+                            </label>
+                            <textarea pInputTextarea id="description" formControlName="description"
+                                      [rows]="6" class="w-full"
+                                      placeholder="Décrivez en détail le poste, ses missions et responsabilités...">
+                            </textarea>
+                            <div class="flex justify-content-between mt-1">
+                                <small class="text-gray-500">
+                                    Minimum 50 caractères. Actuel: {{description?.value?.length || 0}}
+                                </small>
+                                <small *ngIf="description?.invalid && (description?.touched || description?.dirty)"
+                                       class="p-error">
+                                    {{description?.errors?.['required'] ? 'Requis' : 'Minimum 50 caractères'}}
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Exigences -->
+                        <div class="col-12 mb-4">
+                            <label for="requirements" class="block text-sm font-medium text-gray-700 mb-2">
+                                Exigences et responsabilités *
+                            </label>
+                            <textarea pInputTextarea id="requirements" formControlName="requirements"
+                                      [rows]="6" class="w-full"
+                                      placeholder="Liste des compétences, expériences et responsabilités requises...">
+                            </textarea>
+                            <div class="flex justify-content-between mt-1">
+                                <small class="text-gray-500">
+                                    Minimum 50 caractères. Actuel: {{requirements?.value?.length || 0}}
+                                </small>
+                                <small *ngIf="requirements?.invalid && (requirements?.touched || requirements?.dirty)"
+                                       class="p-error">
+                                    {{requirements?.errors?.['required'] ? 'Requis' : 'Minimum 50 caractères'}}
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Compétences -->
+                        <div class="col-12 mb-4">
+                            <label for="skillsRequired" class="block text-sm font-medium text-gray-700 mb-2">
+                                Compétences requises *
+                            </label>
+                            <textarea pInputTextarea id="skillsRequired" formControlName="skillsRequired"
+                                      [rows]="4" class="w-full"
+                                      placeholder="Ex: Java, Spring Boot, Angular, SQL, Docker (séparées par des virgules ou retours à la ligne)">
+                            </textarea>
+                            <small *ngIf="skillsRequired?.invalid && (skillsRequired?.touched || skillsRequired?.dirty)"
+                                   class="p-error block">
+                                Les compétences sont requises
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expérience et éducation -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="pi pi-graduation-cap mr-2"></i>
+                        Profil recherché
+                    </h3>
+
+                    <div class="grid">
+                        <!-- Expérience -->
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="experienceRequired" class="block text-sm font-medium text-gray-700 mb-2">
+                                Années d'expérience requises *
+                            </label>
+                            <p-inputNumber id="experienceRequired" formControlName="experienceRequired"
+                                           [min]="0" [max]="50" suffix=" an(s)"
+                                           class="w-full">
+                            </p-inputNumber>
+                        </div>
+
+                        <!-- Niveau d'étude -->
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="educationLevel" class="block text-sm font-medium text-gray-700 mb-2">
+                                Niveau d'étude
+                            </label>
+                            <p-dropdown id="educationLevel" formControlName="educationLevel"
+                                        [options]="educationLevels"
+                                        class="w-full">
+                            </p-dropdown>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dates -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="pi pi-calendar mr-2"></i>
+                        Dates importantes
+                    </h3>
+
+                    <div class="grid">
+                        <!-- Date de début -->
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-2">
+                                Date de début souhaitée
+                            </label>
+                            <p-calendar id="startDate" formControlName="startDate"
+                                        [showIcon]="true" dateFormat="dd/mm/yy"
+                                         class="w-full"
+                                        placeholder="jj/mm/aaaa">
+                            </p-calendar>
+                            <small class="text-gray-500 mt-1 block">
+                                Format: jj/mm/aaaa
+                            </small>
+                        </div>
+
+                        <!-- Date limite -->
+                        <div class="col-12 md:col-6 mb-4">
+                            <label for="applicationDeadline" class="block text-sm font-medium text-gray-700 mb-2">
+                                Date limite de candidature *
+                            </label>
+                            <p-calendar id="applicationDeadline" formControlName="applicationDeadline"
+                                        [showIcon]="true" dateFormat="dd/mm/yy"
+                                        [minDate]="minDeadlineDate" class="w-full"
+                                        placeholder="jj/mm/aaaa"
+                                        inputId="deadlineInput"
+                                        [readonlyInput]="false"
+                                        [showOnFocus]="true">
+                            </p-calendar>
+                            <div class="flex justify-content-between mt-1">
+                                <small class="text-gray-500">
+                                    Format: jj/mm/aaaa - Minimum: {{minDeadlineDate | date:'dd/MM/yyyy'}}
+                                </small>
+                                <small *ngIf="applicationDeadline?.invalid && (applicationDeadline?.touched || applicationDeadline?.dirty)"
+                                       class="p-error">
+                                    {{applicationDeadline?.errors?.['required'] ? 'La date limite est requise' : 'Date invalide'}}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="pi pi-cog mr-2"></i>
+                        Options
+                    </h3>
+
+                    <div class="grid">
+                        <!-- Télétravail -->
+                        <div class="col-12 md:col-4 mb-4">
+                            <div class="flex align-items-center">
+                                <p-checkbox id="remoteAllowed" formControlName="remoteAllowed"
+                                            binary="true">
+                                </p-checkbox>
+                                <label for="remoteAllowed" class="ml-2 cursor-pointer">
+                                    <span class="font-medium">Télétravail possible</span>
+                                    <small class="block text-gray-500">Travail à distance autorisé</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Urgent -->
+                        <div class="col-12 md:col-4 mb-4">
+                            <div class="flex align-items-center">
+                                <p-checkbox id="isUrgent" formControlName="isUrgent"
+                                            binary="true">
+                                </p-checkbox>
+                                <label for="isUrgent" class="ml-2 cursor-pointer">
+                                    <span class="font-medium">Offre urgente</span>
+                                    <small class="block text-gray-500">Mettre en avant comme urgente</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Mise en avant -->
+                        <div class="col-12 md:col-4 mb-4">
+                            <div class="flex align-items-center">
+                                <p-checkbox id="isFeatured" formControlName="isFeatured"
+                                            binary="true">
+                                </p-checkbox>
+                                <label for="isFeatured" class="ml-2 cursor-pointer">
+                                    <span class="font-medium">Mise en avant</span>
+                                    <small class="block text-gray-500">Afficher en première page</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Statut -->
+                        <div class="col-12 mb-4" *ngIf="isEditMode">
+                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                                Statut de publication *
+                            </label>
+                            <p-dropdown id="status" formControlName="status"
+                                        [options]="statusOptions"
+                                        class="w-full">
+                            </p-dropdown>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-wrap justify-content-between gap-3 pt-4 border-top-1">
+                    <div>
+                        <button pButton pRipple
+                                type="button"
+                                label="Annuler"
+                                icon="pi pi-times"
+                                class="p-button-outlined p-button-secondary"
+                                (click)="onCancel()"
+                                [disabled]="saving">
+                        </button>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button pButton pRipple
+                                type="button"
+                                label="Enregistrer comme brouillon"
+                                icon="pi pi-save"
+                                class="p-button-outlined"
+                                (click)="saveAsDraft()"
+                                [disabled]="saving"
+                                *ngIf="!isEditMode">
+                        </button>
+
+                        <button pButton pRipple
+                                type="submit"
+                                [label]="isEditMode ? 'Mettre à jour' : 'Publier l\'offre'"
+                                [icon]="saving ? 'pi pi-spin pi-spinner' : (isEditMode ? 'pi pi-check' : 'pi pi-send')"
+                                [class]="isEditMode ? 'p-button-success' : 'p-button-primary'"
+                                [disabled]="!offerForm.valid || saving">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

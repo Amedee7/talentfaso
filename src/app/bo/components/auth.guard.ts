@@ -24,7 +24,7 @@ export class AuthGuard implements CanActivate {
         state: RouterStateSnapshot
     ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
 
-        console.log('AuthGuard: Vérification de l\'authentification pour', state.url);
+        // console.log('AuthGuard: Vérification de l\'authentification pour', state.url);
 
         // Vérifier si l'utilisateur est authentifié
         if (this.authService.isAuthenticated()) {

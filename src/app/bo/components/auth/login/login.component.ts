@@ -45,11 +45,11 @@ export class LoginComponent implements OnInit {
         // Récupérer l'URL de retour depuis les query params
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
 
-        console.log('URL de retour détectée:', this.returnUrl);
+        // console.log('URL de retour détectée:', this.returnUrl);
 
         // Vérifier si l'utilisateur est déjà connecté (gardez cette logique)
         if (this.apiService.isAuthenticated()) {
-            console.log('Utilisateur déjà connecté, redirection vers:', this.returnUrl);
+            // console.log('Utilisateur déjà connecté, redirection vers:', this.returnUrl);
             this.router.navigate([this.returnUrl]);
             return;
         }
@@ -112,11 +112,11 @@ export class LoginComponent implements OnInit {
             password: this.password?.value
         };
 
-        console.log('Tentative de connexion avec:', loginPayload.email);
+        // console.log('Tentative de connexion avec:', loginPayload.email);
 
         this.apiService.login(loginPayload).subscribe({
             next: (response) => {
-                console.log('Connexion réussie:', response);
+                // console.log('Connexion réussie:', response);
 
                 // La réponse est maintenant de type AuthResponse
                 if (!response || !response.user) {
@@ -356,7 +356,7 @@ export class LoginComponent implements OnInit {
     private redirectBasedOnRole(user: User): void {
         this.loading = false;
 
-        console.log('Redirection après connexion, returnUrl:', this.returnUrl);
+        // console.log('Redirection après connexion, returnUrl:', this.returnUrl);
 
         // Délai pour laisser voir le message de succès
         setTimeout(() => {

@@ -1,0 +1,146 @@
+.offer-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    h1, .text-lg, .font-medium, .font-bold {
+        color: white !important;
+    }
+
+    i {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    .badge {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+}
+
+.prose {
+    max-width: 65ch;
+
+    p {
+        margin-bottom: 1rem;
+        line-height: 1.7;
+    }
+}
+
+.skill-pill {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #e9ecef;
+    color: #495057;
+    border-radius: 50rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0.25rem;
+    transition: all 0.2s;
+
+    &:hover {
+        background-color: #dee2e6;
+        transform: translateY(-1px);
+    }
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &.badge-urgent {
+        background-color: #fff3e0;
+        color: #ef6c00;
+        border: 1px solid #ffe0b2;
+    }
+
+    &.badge-featured {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+        border: 1px solid #e1bee7;
+    }
+
+    &.badge-remote {
+        background-color: #e8eaf6;
+        color: #3949ab;
+        border: 1px solid #c5cae9;
+    }
+
+    &.badge-expired {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+
+    &.badge-info {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    &.badge-success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    &.badge-warning {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+
+    &.badge-secondary {
+        background-color: #f5f5f5;
+        color: #616161;
+    }
+
+    &.badge-danger {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+}
+
+.surface-hover {
+    transition: all 0.3s;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .offer-header {
+        padding: 2rem 1rem !important;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+    }
+}
+
+// Animation pour l'apparition
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+:host {
+    display: block;
+    animation: fadeIn 0.5s ease-out;
+}

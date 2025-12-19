@@ -1,0 +1,67 @@
+:host ::ng-deep {
+    .p-editor-content {
+        min-height: 200px;
+    }
+
+    .p-calendar {
+        width: 100%;
+    }
+
+    .p-inputnumber {
+        width: 100%;
+    }
+
+    .p-dropdown {
+        width: 100%;
+    }
+}
+
+.form-section {
+    margin-bottom: 2rem;
+
+    .section-title {
+        color: #2d3748;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+.required-asterisk {
+    color: #e53e3e;
+}
+
+.p-error {
+    margin-top: 0.25rem;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .p-editor-content {
+        min-height: 150px;
+    }
+}
+
+:host ::ng-deep {
+    .p-invalid {
+        border-color: #e24c4c !important;
+    }
+
+    .p-inputtext.ng-invalid.ng-touched,
+    .p-dropdown.ng-invalid.ng-touched,
+    .p-inputnumber.ng-invalid.ng-touched .p-inputtext {
+        border-color: #e24c4c !important;
+    }
+
+    .p-calendar.ng-invalid.ng-touched .p-inputtext {
+        border-color: #e24c4c !important;
+    }
+}
+
+.form-debug-info {
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 10px;
+    margin-bottom: 20px;
+    font-size: 0.875rem;
+}

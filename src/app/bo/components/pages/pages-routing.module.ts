@@ -48,6 +48,13 @@ const routes: Routes = [
         canActivate: [RoleGuard],
         data: { roles: ['ADMIN'] }
     },
+    // Gestion des notification (admin seulement)
+    {
+        path: 'notifications-management',
+        loadChildren: () => import('./notifications-management/notifications-management.module').then(m => m.NotificationsManagementModule),
+        canActivate: [RoleGuard],
+        data: { roles: ['ADMIN'] }
+    },
 
     // Autres pages
     { path: 'timeline', loadChildren: () => import('./timeline/timelinedemo.module').then(m => m.TimelineDemoModule) },

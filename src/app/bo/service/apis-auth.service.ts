@@ -155,7 +155,7 @@ export class ApisAuthService {
             localStorage.setItem(this.USER_KEY, userStr);
             this.currentUserSubject.next(safeUser);
 
-            console.log('Utilisateur stocké avec succès:', safeUser.email);
+            // console.log('Utilisateur stocké avec succès:', safeUser.email);
 
         } catch (error) {
             console.error('Erreur lors du stockage des données utilisateur:', error);
@@ -235,7 +235,7 @@ export class ApisAuthService {
         return this.http.post<LoginResponse>(url, payload).pipe(
             timeout(this.apiTimeout),
             tap((apiResponse: LoginResponse) => {
-                console.log('Réponse API brute:', apiResponse);
+                // console.log('Réponse API brute:', apiResponse);
 
                 // Validation de la réponse
                 if (!apiResponse || !apiResponse.token) {
@@ -299,7 +299,7 @@ export class ApisAuthService {
                 throw new Error('Données utilisateur invalides');
             }
 
-            console.log('Connexion réussie pour:', user.email);
+            // console.log('Connexion réussie pour:', user.email);
 
             // Émettre un événement global
             document.dispatchEvent(new CustomEvent('auth:success', {
@@ -311,7 +311,7 @@ export class ApisAuthService {
 
             // Vérifier si c'est la première connexion
             if (user.isFirstLogin) {
-                console.log('Première connexion détectée');
+                // console.log('Première connexion détectée');
                 // Vous pouvez rediriger vers une page de première connexion si besoin
             }
 

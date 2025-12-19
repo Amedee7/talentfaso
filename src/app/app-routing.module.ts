@@ -17,23 +17,31 @@ import { LoginGuard } from "./bo/components/login.guard";
             {
                 path: '',
                 component: AppLayoutComponent,
-                canActivate: [AuthGuard], // Protection du layout principal
+                canActivate: [AuthGuard],
                 children: [
                     {
                         path: 'dashboard',
                         loadChildren: () => import('./bo/components/dashboard/dashboard.module').then(m => m.DashboardModule)
                     },
                     {
-                        path: 'users-management',  // Pas de préfixe /pages
+                        path: 'users-management',
                         loadChildren: () => import('./bo/components/pages/users-management/users-management.module').then(m => m.UsersManagementModule)
                     },
                     {
-                        path: 'skill-types-management',  // Pas de préfixe /pages
+                        path: 'skill-types-management',
                         loadChildren: () => import('./bo/components/pages/skill-types-management/skill-types-management.module').then(m => m.SkillTypesManagementModule)
                     },
                     {
-                        path: 'roles-management',  // Pas de préfixe /pages
+                        path: 'roles-management',
                         loadChildren: () => import('./bo/components/pages/roles-management/roles-management.module').then(m => m.RolesManagementModule)
+                    },
+                    {
+                        path: 'offers-list-management',
+                        loadChildren: () => import('./bo/components/pages/offers-list-management/offers-list-management.module').then(m => m.OffersListManagementModule)
+                    },
+                    {
+                        path: 'notifications-management',
+                        loadChildren: () => import('./bo/components/pages/notifications-management/notifications-management.module').then(m => m.NotificationsManagementModule)
                     }
                 ]
             },

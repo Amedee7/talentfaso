@@ -33,10 +33,21 @@ export class AppMenuComponent implements OnInit {
                         label: 'Roles',
                         icon: 'pi pi-fw pi-list',
                         routerLink: ['/roles-management']
-                    },{
+                    },
+                    {
                         label: 'Competences',
                         icon: 'pi pi-fw pi-list',
                         routerLink: ['/skill-types-management']
+                    },
+                    {
+                        label: 'Gestion des offres',
+                        icon: 'pi pi-fw pi-briefcase',
+                        routerLink: ['/offers-list-management']
+                    },
+                    {
+                        label: 'Gestion des notification',
+                        icon: 'pi pi-fw pi-briefcase',
+                        routerLink: ['/notifications-management']
                     }
                 ]
             }
